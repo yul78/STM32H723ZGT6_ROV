@@ -13,7 +13,7 @@ jy901_data_t* data = &jy901_data;  //定义指向jy901_data的指针变量
 uint8_t JY_RxBuffer[JY_Buffer_Size];
 
 static void JY901_Feed(uint8_t byte);
-static void JY901_Convert(const jy901_raw_t *raw, jy901_data_t *out);
+static void JY901_Data_Convert(const jy901_raw_t *raw, jy901_data_t *out);
 
 /**
  * @brief JY901模块 绑定 单片机USART和DMA句柄
@@ -22,6 +22,10 @@ void JY901_Init(void)
 {
     jy901_uart.huart   = &huart_jy901;
     jy901_uart.hdma_rx = huart_jy901.hdmarx;
+
+    HAL_UART_DMAStop(jy901_uart.huart); // 确保 DMA 处于空闲状态
+    HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);   //开启UART空闲中断+DMA接收
+    __HAL_DMA_DISABLE_IT(jy901_uart.hdma_rx, DMA_IT_HT);                           //关闭DMA的半传输中断
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
@@ -37,7 +41,10 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         }
 
         /* 重新启动 DMA + IDLE 接收 */
-        HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart,JY_RxBuffer, JY_Buffer_Size);
+        //HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart,JY_RxBuffer, JY_Buffer_Size);
+        HAL_UART_DMAStop(jy901_uart.huart); // 确保彻底停止
+        HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);
+        __HAL_DMA_DISABLE_IT(jy901_uart.hdma_rx, DMA_IT_HT);
     }
 }
 
@@ -86,7 +93,7 @@ static void JY901_Process(uint8_t *buf)
     }
 
     /* 实时转换为物理量 */
-    JY901_Convert(raw, data);
+    JY901_Data_Convert(raw, data);
 }
 
 /**
@@ -149,7 +156,7 @@ static void JY901_Feed(uint8_t byte)
  * @param raw 输入的原始数据结构体指针
  * @param out 输出的物理量数据结构体指针
  */
-static void JY901_Convert(const jy901_raw_t *raw, jy901_data_t *out)
+static void JY901_Data_Convert(const jy901_raw_t *raw, jy901_data_t *out)
 {
     /* 加速度 ±16g */
     out->ax = raw->ax / 2048.0f;

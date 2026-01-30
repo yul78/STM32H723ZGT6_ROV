@@ -31,6 +31,8 @@
 #include "mpu6050.h"
 #include "JY901.h"
 #include "H_Tmc2209.h"
+#include "WaterADC.h"
+#include "control.h"
 
 /* USER CODE END Includes */
 
@@ -53,6 +55,7 @@
 
 /* USER CODE BEGIN PV */
 uint16_t adc_value[2];
+uint8_t rx_data;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,32 +97,37 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+  HAL_Delay(500);  //加个延时等其他设备启动
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_UART4_Init();
   MX_TIM2_Init();
   MX_TIM5_Init();
-  MX_ADC1_Init();
   MX_USART2_UART_Init();
+  MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
+
   OLED_Init();
   MPU6050_Init();
   JY901_Init();
+  Water_Tank_Init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);   //开启UART空闲中断+DMA接收
-  __HAL_DMA_DISABLE_IT(jy901_uart.hdma_rx, DMA_IT_HT);                           //关闭DMA的半传输中断
+  
 
-  HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);                   //ADC校准
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_value, sizeof(adc_value)/sizeof(adc_value[0]));  //开启ADC DMA转换
-
+  HAL_ADCEx_Calibration_Start(&hadc3, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);                   //ADC校准
+  HAL_ADC_Start_DMA(&hadc3, (uint32_t *)adc_value, sizeof(adc_value)/sizeof(adc_value[0]));  //开启ADC DMA转换
+ 
+  HAL_UART_Receive_IT(&huart4, &rx_data, 1); //开启UART中断接收
+  Water_Tank_Filling(&tank_front, 1);
   while (1)
   {
     //OLED_ShowString(0,0,"hello,723!",OLED_8X16);
@@ -137,18 +145,28 @@ int main(void)
     OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
     OLED_ShowFloatNum(0, 32, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
 
-    /************* OLED显示MPU6050原始数据 *************/
-    // int16_t ax,ay,az,gx,gy,gz;
-    // MPU6050_GetData(&ax,&ay,&az,&gx,&gy,&gz);
-    // OLED_ShowSignedNum(64,0,ax,5,OLED_8X16);
-    // OLED_ShowSignedNum(64, 16, ay, 4, OLED_8X16);
-    // OLED_ShowSignedNum(64, 32, az, 4, OLED_8X16);
+    /************* OLED显示MPU6050物理数据 *************/
+    //MPU6050_GetData();
 
+    // OLED_ShowFloatNum(0, 0, mpu6050_data.ax,2, 2, OLED_8X16);       // X轴加速度（单位：g）
+    // OLED_ShowFloatNum(0, 16, mpu6050_data.ay,2, 2, OLED_8X16);      // Y轴加速度（单位：g）
+    // OLED_ShowFloatNum(0, 32, mpu6050_data.az, 2, 2, OLED_8X16);     // Z轴加速度（单位：g）
+
+    // OLED_ShowFloatNum(0, 0, jy901_data.gx, 2, 2, OLED_8X16);      // X轴角速度（单位：度每秒）
+    // OLED_ShowFloatNum(0, 16, jy901_data.gy, 2, 2, OLED_8X16);     // Y轴角速度（单位：度每秒）
+    // OLED_ShowFloatNum(0, 32, jy901_data.gz, 2, 2, OLED_8X16);     // Z轴角速度（单位：度每秒）
     
+    // OLED_ShowFloatNum(0, 0, mpu6050_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
+    // OLED_ShowFloatNum(0, 16, mpu6050_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
+    // OLED_ShowFloatNum(0, 32, mpu6050_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
 
     /**************** OLED显示ADC采样值 ****************/
-    OLED_ShowNum(64, 0, adc_value[0], 5, OLED_8X16);
-    OLED_ShowNum(64, 16, adc_value[1], 5, OLED_8X16);
+    // OLED_ShowNum(64, 0, adc_value[0], 5, OLED_8X16);
+    // OLED_ShowNum(64, 16, adc_value[1], 5, OLED_8X16);
+
+    if(Water_Check()) {};
+    // OLED_ShowFloatNum(64, 0, voltage_value[0], 1, 1, OLED_8X16);    
+    // OLED_ShowFloatNum(64, 16,voltage_value[1], 1, 1, OLED_8X16);      
 
     /*********************步进电机**********************/
     // if(jy901_data.roll > 10)
@@ -161,11 +179,23 @@ int main(void)
     //     Motor_Set(1, 2, 0, 800,400,2400,800);
     //     Motor_Set(2, 2, 0, 800,400,2400,800);
     // }
+    //OLED_ShowNum(64, 32, Motor_GetStep(1), 5, OLED_8X16);
+    
+    /*********************水舱**********************/
+    OLED_ShowNum(64, 0, tank_front.state, 1, OLED_8X16);
+    //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
+    //Water_Tank_Front_Get_Volume();
+    OLED_ShowFloatNum(64, 16, tank_front.now_water_volume, 2, 2, OLED_8X16);
+    //OLED_ShowFloatNum(64, 32, tank_front.target_water_volume, 2, 2, OLED_8X16);
     
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
      OLED_Update();
+    //  Water_Tank_State_Update(&tank_front);
+    //  Water_Tank_State_Update(&tank_rear);
+    Water_Tank_Update_Handler(&tank_front);
+    Water_Tank_Update_Handler(&tank_rear);
   }
   /* USER CODE END 3 */
 }

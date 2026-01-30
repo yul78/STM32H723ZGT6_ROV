@@ -16,9 +16,9 @@ typedef struct {
     uint8_t en;
     GPIO_PinState dir;
     uint16_t hz;
-    uint16_t current_step;
-    uint16_t target_step;
-    uint16_t arr;
+    uint32_t current_step;
+    uint32_t target_step;
+    uint32_t arr;
     MotionStep steps;
     TrapezoidVelocity velocity;
 } MotorStruct;
@@ -29,7 +29,8 @@ extern TIM_HandleTypeDef* motor_htim[MOTOR_NUM];
 extern uint32_t motor_channel[MOTOR_NUM];
 extern GPIO_TypeDef* motor_en_port[MOTOR_NUM];
 extern uint16_t motor_en_pin[MOTOR_NUM];
-
+extern uint16_t pulse_percircle;
+extern MotorStruct Motor[10];
 
 // 如果未定义 MOTOR_COUNT，则定义为 6
 #ifndef MOTOR_COUNT
@@ -41,9 +42,9 @@ extern uint16_t motor_en_pin[MOTOR_NUM];
 
 void stepper_init(MotorStruct *Motor, uint16_t v_start, uint16_t v_max, uint16_t acc, uint16_t steps);
 
-void Motor_Set(uint8_t num, uint8_t mode, GPIO_PinState dir, uint16_t hz,uint16_t vstart,uint16_t vmax,uint16_t acc);
+void Motor_Set(uint8_t num, uint8_t mode, GPIO_PinState dir, uint16_t pulse_num, uint16_t pulse_hz, uint16_t vstart, uint16_t vmax, uint16_t vacc); // 模式1定速 模式2定步 模式3停止
 void Motor_SetSpeed(uint8_t num);
-
-uint16_t Motor_GetStep(uint8_t num);
+void Motor_Stop(uint8_t num);
+uint32_t Motor_GetStep(uint8_t num);
 
 #endif /* __H_TMC2209_H__ */

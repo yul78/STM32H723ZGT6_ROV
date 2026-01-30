@@ -37,7 +37,7 @@ uint32_t motor_channel[MOTOR_COUNT + 1] = {
 };
 /*******************************************************/
 
-
+uint16_t pulse_percircle = 3200;  //转一圈走的步数，产生的脉冲数
 
 MotorStruct Motor[10] = {0};
 
@@ -51,19 +51,19 @@ void stepper_init(MotorStruct *motor, uint16_t v_start, uint16_t v_max, uint16_t
     motor->current_step = 0;
 }
 
-void Motor_Set(uint8_t num, uint8_t mode, GPIO_PinState dir, uint16_t hz, uint16_t vstart, uint16_t vmax, uint16_t vacc) // 模式1定速 模式2定步 模式3停止
+void Motor_Set(uint8_t num, uint8_t mode, GPIO_PinState dir, uint16_t pulse_num, uint16_t pulse_hz, uint16_t vstart, uint16_t vmax, uint16_t vacc) // 模式1定速 模式2定步 模式3停止
 {
     Motor[num].en = ENABLE;
     switch (mode)
     {
     case Constant_speed: // 定速模式
         Motor[num].mode = Constant_speed;
-        Motor[num].hz = hz;
+        Motor[num].hz = pulse_hz;
         break;
     case Constant_step: // 定步模式
         Motor[num].mode = Constant_step;
-        stepper_init(&Motor[num], vstart, vmax, vacc, hz);
-        Motor[num].hz = 3200;
+        stepper_init(&Motor[num], vstart, vmax, vacc, pulse_num);
+        Motor[num].hz = pulse_hz;
         // Motor[num].hz = get_step_speed(Motor[num].current_step, Motor[num].steps, Motor[num].velocity);
         break;
     case STOP_mode: // 停止模式
@@ -99,7 +99,7 @@ void Motor_SetSpeed(uint8_t num)
     HAL_TIM_Base_Start_IT(motor_tim[num]);
 }
 
-uint16_t Motor_GetStep(uint8_t num) // 细分步数为1  脉冲大概为180度
+uint32_t Motor_GetStep(uint8_t num) // 细分步数为1  脉冲大概为180度
 {                                   // 电机脉冲值获取
     switch (num)
     {
@@ -124,6 +124,12 @@ uint16_t Motor_GetStep(uint8_t num) // 细分步数为1  脉冲大概为180度
     default:
         return 0;
     }
+}
+
+void Motor_Stop(uint8_t num)
+{
+    HAL_TIM_Base_Stop_IT(motor_tim[num]);
+    HAL_TIM_PWM_Stop(motor_tim[num], motor_channel[num]);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)

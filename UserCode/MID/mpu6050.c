@@ -4,14 +4,21 @@
 #include "main.h"
 
 #define MPU6050_ADDRESS		0xD0		//MPU6050的I2C从机地址
-
+#define ACCEL_SENSITIVITY 2048.0f   // 对于 ±16g 量程
+#define GYRO_SENSITIVITY 16.4f      // 对于 ±2000°/s 量程
 
 #include "inv_mpu_dmp_motion_driver.h"
 #include "inv_mpu.h"
 
 #define q30  1073741824.0f //用于归一化四元数
-
 #define DEFAULT_MPU_HZ  (200) //DMP采样频率200Hz
+
+mpu6050_raw_t mpu6050_raw;
+mpu6050_raw_t *p_mpu6050_raw = &mpu6050_raw;
+mpu6050_data_t mpu6050_data;
+mpu6050_data_t *p_mpu6050_data = &mpu6050_data;
+
+static void MPU6050_Data_Convert(const mpu6050_raw_t *raw, mpu6050_data_t *out);
 
 short gyro[3], accel[3], sensors; //用于读取DMP_FIFO
 
@@ -272,36 +279,53 @@ uint8_t MPU6050_GetID(void)
   * 参    数：GyroX GyroY GyroZ 陀螺仪X、Y、Z轴的数据，使用输出参数的形式返回，范围：-32768~32767
   * 返 回 值：无
   */
-void MPU6050_GetData(int16_t *AccX, int16_t *AccY, int16_t *AccZ, 
-						int16_t *GyroX, int16_t *GyroY, int16_t *GyroZ)
+void MPU6050_GetData(void)
 {
 	uint8_t DataH, DataL;								//定义数据高8位和低8位的变量
 	
 	DataH = MPU6050_ReadReg(MPU6050_ACCEL_XOUT_H);		//读取加速度计X轴的高8位数据
 	DataL = MPU6050_ReadReg(MPU6050_ACCEL_XOUT_L);		//读取加速度计X轴的低8位数据
-	*AccX = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
+	p_mpu6050_raw->ax = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
 	
 	DataH = MPU6050_ReadReg(MPU6050_ACCEL_YOUT_H);		//读取加速度计Y轴的高8位数据
 	DataL = MPU6050_ReadReg(MPU6050_ACCEL_YOUT_L);		//读取加速度计Y轴的低8位数据
-	*AccY = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
+	p_mpu6050_raw->ay = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
 	
 	DataH = MPU6050_ReadReg(MPU6050_ACCEL_ZOUT_H);		//读取加速度计Z轴的高8位数据
 	DataL = MPU6050_ReadReg(MPU6050_ACCEL_ZOUT_L);		//读取加速度计Z轴的低8位数据
-	*AccZ = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
+	p_mpu6050_raw->az = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
 	
 	DataH = MPU6050_ReadReg(MPU6050_GYRO_XOUT_H);		//读取陀螺仪X轴的高8位数据
 	DataL = MPU6050_ReadReg(MPU6050_GYRO_XOUT_L);		//读取陀螺仪X轴的低8位数据
-	*GyroX = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
+	p_mpu6050_raw->gx = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
 	
 	DataH = MPU6050_ReadReg(MPU6050_GYRO_YOUT_H);		//读取陀螺仪Y轴的高8位数据
 	DataL = MPU6050_ReadReg(MPU6050_GYRO_YOUT_L);		//读取陀螺仪Y轴的低8位数据
-	*GyroY = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
+	p_mpu6050_raw->gy = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
 	
 	DataH = MPU6050_ReadReg(MPU6050_GYRO_ZOUT_H);		//读取陀螺仪Z轴的高8位数据
 	DataL = MPU6050_ReadReg(MPU6050_GYRO_ZOUT_L);		//读取陀螺仪Z轴的低8位数据
-	*GyroZ = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
+	p_mpu6050_raw->gz = (DataH << 8) | DataL;						//数据拼接，通过输出参数返回
+
+    MPU6050_DMP_Get_Data(&(p_mpu6050_raw->pitch), &(p_mpu6050_raw->roll), &(p_mpu6050_raw->yaw));
+
+    MPU6050_Data_Convert(p_mpu6050_raw, p_mpu6050_data);
 }
 
+static void MPU6050_Data_Convert(const mpu6050_raw_t *raw, mpu6050_data_t *out)
+{
+    out->ax = (float)raw->ax / ACCEL_SENSITIVITY;
+    out->ay = (float)raw->ay / ACCEL_SENSITIVITY;
+    out->az = (float)raw->az / ACCEL_SENSITIVITY;
+
+    out->gx = (float)raw->gx / GYRO_SENSITIVITY;
+    out->gy = (float)raw->gy / GYRO_SENSITIVITY;
+    out->gz = (float)raw->gz / GYRO_SENSITIVITY;
+
+    out->pitch = raw->pitch;
+    out->roll = raw->roll;
+    out->yaw = raw->yaw;
+}
 
 int MPU6050_dmp_Write(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *data) //向指定地址写len个字节,用于dmp
 {
