@@ -39,12 +39,6 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
             /* 喂给 JY901 协议解析 */
             JY901_Feed(byte);
         }
-
-        /* 重新启动 DMA + IDLE 接收 */
-        //HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart,JY_RxBuffer, JY_Buffer_Size);
-        HAL_UART_DMAStop(jy901_uart.huart); // 确保彻底停止
-        HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);
-        __HAL_DMA_DISABLE_IT(jy901_uart.hdma_rx, DMA_IT_HT);
     }
 }
 

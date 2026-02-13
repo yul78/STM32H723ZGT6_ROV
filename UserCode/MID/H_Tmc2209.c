@@ -143,7 +143,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 Motor[i].current_step++;
                 if (Motor[i].current_step >= Motor[i].target_step)
                 {
-                    Motor[i].current_step = 0;
+                    // Motor[i].current_step = 0;
                     Motor[i].target_step = 0;
                     // HAL_GPIO_WritePin(en_ports[i], en_pins[i], GPIO_PIN_RESET);
                     HAL_TIM_Base_Stop_IT(motor_tim[i]);

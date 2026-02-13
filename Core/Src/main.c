@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -32,7 +33,7 @@
 #include "JY901.h"
 #include "H_Tmc2209.h"
 #include "WaterADC.h"
-#include "control.h"
+#include "WaterTank.h"
 
 /* USER CODE END Includes */
 
@@ -54,12 +55,13 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t adc_value[2];
+
 uint8_t rx_data;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 
@@ -96,13 +98,15 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+  /* Configure the peripherals common clocks */
+  PeriphCommonClock_Config();
+
   /* USER CODE BEGIN SysInit */
   HAL_Delay(500);  //加个延时等其他设备启动
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_UART4_Init();
@@ -110,24 +114,24 @@ int main(void)
   MX_TIM5_Init();
   MX_USART2_UART_Init();
   MX_ADC3_Init();
+  MX_ADC2_Init();
+  MX_TIM1_Init();
+  MX_TIM3_Init();
+  MX_SPI6_Init();
   /* USER CODE BEGIN 2 */
 
   OLED_Init();
   MPU6050_Init();
   JY901_Init();
   Water_Tank_Init();
-
+  WaterADC_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  
-
-  HAL_ADCEx_Calibration_Start(&hadc3, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);                   //ADC校准
-  HAL_ADC_Start_DMA(&hadc3, (uint32_t *)adc_value, sizeof(adc_value)/sizeof(adc_value[0]));  //开启ADC DMA转换
  
   HAL_UART_Receive_IT(&huart4, &rx_data, 1); //开启UART中断接收
-  Water_Tank_Filling(&tank_front, 1);
+  
   while (1)
   {
     //OLED_ShowString(0,0,"hello,723!",OLED_8X16);
@@ -142,8 +146,8 @@ int main(void)
     // OLED_ShowFloatNum(0, 32, jy901_data.gz, 2, 2, OLED_8X16);     // Z轴角速度（单位：度每秒）
 
     OLED_ShowFloatNum(0, 0, jy901_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
-    OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
-    OLED_ShowFloatNum(0, 32, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
+    //OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
+    //OLED_ShowFloatNum(0, 32, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
 
     /************* OLED显示MPU6050物理数据 *************/
     //MPU6050_GetData();
@@ -164,9 +168,16 @@ int main(void)
     // OLED_ShowNum(64, 0, adc_value[0], 5, OLED_8X16);
     // OLED_ShowNum(64, 16, adc_value[1], 5, OLED_8X16);
 
-    if(Water_Check()) {};
-    // OLED_ShowFloatNum(64, 0, voltage_value[0], 1, 1, OLED_8X16);    
-    // OLED_ShowFloatNum(64, 16,voltage_value[1], 1, 1, OLED_8X16);      
+    if(Water_Check()) 
+    {
+      HAL_UART_Transmit(&huart4, (uint8_t*)"Water detected! Start draining...\r\n", 36, HAL_MAX_DELAY); //调试信息
+      Water_Tank_Draning_To_Empty(&tank_front);
+      //Water_Tank_Draning_To_Empty(&tank_rear);
+      HAL_UART_Transmit(&huart4, (uint8_t*)"Draing finished...\r\n", 20, HAL_MAX_DELAY); //调试信息
+      while(1);
+    };
+    OLED_ShowFloatNum(0, 48, voltage_value[0], 1, 1, OLED_8X16);    
+    OLED_ShowFloatNum(64, 48,voltage_value[1], 1, 1, OLED_8X16);      
 
     /*********************步进电机**********************/
     // if(jy901_data.roll > 10)
@@ -182,10 +193,13 @@ int main(void)
     //OLED_ShowNum(64, 32, Motor_GetStep(1), 5, OLED_8X16);
     
     /*********************水舱**********************/
-    OLED_ShowNum(64, 0, tank_front.state, 1, OLED_8X16);
+    OLED_ShowNum(0,16, tank_front.state, 1, OLED_8X16);
+    OLED_ShowFloatNum(0, 32, tank_front.now_water_volume, 2, 2, OLED_8X16);
+    
     //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
     //Water_Tank_Front_Get_Volume();
-    OLED_ShowFloatNum(64, 16, tank_front.now_water_volume, 2, 2, OLED_8X16);
+    OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
+    OLED_ShowFloatNum(64, 32, tank_rear.now_water_volume, 2, 2, OLED_8X16);
     //OLED_ShowFloatNum(64, 32, tank_front.target_water_volume, 2, 2, OLED_8X16);
     
     /* USER CODE END WHILE */
@@ -254,6 +268,32 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief Peripherals Common Clock Configuration
+  * @retval None
+  */
+void PeriphCommonClock_Config(void)
+{
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+  /** Initializes the peripherals clock
+  */
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInitStruct.PLL2.PLL2M = 32;
+  PeriphClkInitStruct.PLL2.PLL2N = 129;
+  PeriphClkInitStruct.PLL2.PLL2P = 2;
+  PeriphClkInitStruct.PLL2.PLL2Q = 2;
+  PeriphClkInitStruct.PLL2.PLL2R = 2;
+  PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+  PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+  PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+  PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }

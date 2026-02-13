@@ -58,12 +58,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define DIR1OUT_Pin GPIO_PIN_1
-#define DIR1OUT_GPIO_Port GPIOF
-#define DIR2OUT_Pin GPIO_PIN_2
-#define DIR2OUT_GPIO_Port GPIOF
 #define EN2OUT_Pin GPIO_PIN_1
 #define EN2OUT_GPIO_Port GPIOA
+#define DIR2OUT_Pin GPIO_PIN_2
+#define DIR2OUT_GPIO_Port GPIOA
 #define OLED_SCL_Pin GPIO_PIN_4
 #define OLED_SCL_GPIO_Port GPIOA
 #define OLED_SDA_Pin GPIO_PIN_5
@@ -86,6 +84,8 @@ void Error_Handler(void);
 #define tank_rear_empty_EXTI_IRQn EXTI9_5_IRQn
 #define EN1OUT_Pin GPIO_PIN_10
 #define EN1OUT_GPIO_Port GPIOC
+#define DIR1OUT_Pin GPIO_PIN_1
+#define DIR1OUT_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 
