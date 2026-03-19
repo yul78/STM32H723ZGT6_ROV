@@ -20,18 +20,17 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
-#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "H_Tmc2209.h"
 #include "delay.h"
 #include "OLED.h"
 #include "mpu6050.h"
 #include "JY901.h"
-#include "H_Tmc2209.h"
 #include "WaterADC.h"
 #include "WaterTank.h"
 
@@ -109,15 +108,14 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_UART4_Init();
   MX_TIM2_Init();
   MX_TIM5_Init();
-  MX_USART2_UART_Init();
   MX_ADC3_Init();
   MX_ADC2_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
-  MX_SPI6_Init();
+  MX_USART1_UART_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   OLED_Init();
@@ -130,10 +128,11 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
  
-  HAL_UART_Receive_IT(&huart4, &rx_data, 1); //开启UART中断接收
-  
+  HAL_UART_Receive_IT(&huart3, &rx_data, 1); //开启UART中断接收
+
   while (1)
   {
+    JY901_Task();
     //OLED_ShowString(0,0,"hello,723!",OLED_8X16);
     
     /************* OLED显示JY901S物理数据 *************/
@@ -170,10 +169,10 @@ int main(void)
 
     if(Water_Check()) 
     {
-      HAL_UART_Transmit(&huart4, (uint8_t*)"Water detected! Start draining...\r\n", 36, HAL_MAX_DELAY); //调试信息
-      Water_Tank_Draning_To_Empty(&tank_front);
+      HAL_UART_Transmit(&huart3, (uint8_t*)"Water detected! Start draining...\r\n", 36, HAL_MAX_DELAY); //调试信息
+      Water_Tank_Draining_To_Empty(&tank_front);
       //Water_Tank_Draning_To_Empty(&tank_rear);
-      HAL_UART_Transmit(&huart4, (uint8_t*)"Draing finished...\r\n", 20, HAL_MAX_DELAY); //调试信息
+      HAL_UART_Transmit(&huart3, (uint8_t*)"Draing finished...\r\n", 20, HAL_MAX_DELAY); //调试信息
       while(1);
     };
     OLED_ShowFloatNum(0, 48, voltage_value[0], 1, 1, OLED_8X16);    
@@ -206,10 +205,10 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
      OLED_Update();
-    //  Water_Tank_State_Update(&tank_front);
-    //  Water_Tank_State_Update(&tank_rear);
+
     Water_Tank_Update_Handler(&tank_front);
     Water_Tank_Update_Handler(&tank_rear);
+    
   }
   /* USER CODE END 3 */
 }

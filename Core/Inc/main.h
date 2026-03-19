@@ -58,34 +58,34 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define tank_rear_full_Pin GPIO_PIN_2
+#define tank_rear_full_GPIO_Port GPIOE
+#define tank_rear_full_EXTI_IRQn EXTI2_IRQn
+#define tank_rear_empty_Pin GPIO_PIN_3
+#define tank_rear_empty_GPIO_Port GPIOE
+#define tank_rear_empty_EXTI_IRQn EXTI3_IRQn
+#define OLED_SDA_Pin GPIO_PIN_0
+#define OLED_SDA_GPIO_Port GPIOF
+#define OLED_SCL_Pin GPIO_PIN_1
+#define OLED_SCL_GPIO_Port GPIOF
 #define EN2OUT_Pin GPIO_PIN_1
 #define EN2OUT_GPIO_Port GPIOA
-#define DIR2OUT_Pin GPIO_PIN_2
+#define DIR2OUT_Pin GPIO_PIN_7
 #define DIR2OUT_GPIO_Port GPIOA
-#define OLED_SCL_Pin GPIO_PIN_4
-#define OLED_SCL_GPIO_Port GPIOA
-#define OLED_SDA_Pin GPIO_PIN_5
-#define OLED_SDA_GPIO_Port GPIOA
+#define DIR1OUT_Pin GPIO_PIN_4
+#define DIR1OUT_GPIO_Port GPIOC
 #define MPU_IIC_SCL_Pin GPIO_PIN_1
 #define MPU_IIC_SCL_GPIO_Port GPIOB
 #define MPU_IIC_SDA_Pin GPIO_PIN_2
 #define MPU_IIC_SDA_GPIO_Port GPIOB
-#define tank_front_full_Pin GPIO_PIN_5
-#define tank_front_full_GPIO_Port GPIOG
-#define tank_front_full_EXTI_IRQn EXTI9_5_IRQn
-#define tank_front_empty_Pin GPIO_PIN_6
-#define tank_front_empty_GPIO_Port GPIOG
-#define tank_front_empty_EXTI_IRQn EXTI9_5_IRQn
-#define tank_rear_full_Pin GPIO_PIN_7
-#define tank_rear_full_GPIO_Port GPIOG
-#define tank_rear_full_EXTI_IRQn EXTI9_5_IRQn
-#define tank_rear_empty_Pin GPIO_PIN_8
-#define tank_rear_empty_GPIO_Port GPIOG
-#define tank_rear_empty_EXTI_IRQn EXTI9_5_IRQn
 #define EN1OUT_Pin GPIO_PIN_10
 #define EN1OUT_GPIO_Port GPIOC
-#define DIR1OUT_Pin GPIO_PIN_1
-#define DIR1OUT_GPIO_Port GPIOD
+#define tank_front_empty_Pin GPIO_PIN_5
+#define tank_front_empty_GPIO_Port GPIOD
+#define tank_front_empty_EXTI_IRQn EXTI9_5_IRQn
+#define tank_front_full_Pin GPIO_PIN_6
+#define tank_front_full_GPIO_Port GPIOD
+#define tank_front_full_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 

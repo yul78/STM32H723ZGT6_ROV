@@ -132,33 +132,3 @@ void Motor_Stop(uint8_t num)
     HAL_TIM_PWM_Stop(motor_tim[num], motor_channel[num]);
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    for (int i = 1; i <= 6; i++)
-    {
-        if (htim == motor_tim[i])
-        {
-            if (Motor[i].mode == Constant_step && Motor[i].target_step)
-            {
-                Motor[i].current_step++;
-                if (Motor[i].current_step >= Motor[i].target_step)
-                {
-                    // Motor[i].current_step = 0;
-                    Motor[i].target_step = 0;
-                    // HAL_GPIO_WritePin(en_ports[i], en_pins[i], GPIO_PIN_RESET);
-                    HAL_TIM_Base_Stop_IT(motor_tim[i]);
-                    HAL_TIM_PWM_Stop(motor_tim[i], motor_channel[i]);
-                }
-                // else
-                // {
-                //     Motor[i].hz = get_step_speed(Motor[i].current_step, Motor[i].steps, Motor[i].velocity);
-                //     uint16_t arr = (TIMER_CLK_HZ / Motor[i].hz) - 1;
-                //     __HAL_TIM_SET_AUTORELOAD(motor_tim[i], arr);
-                //     __HAL_TIM_SET_COMPARE(motor_tim[i], motor_channel[i], arr / 2);
-                //     __HAL_TIM_SET_COUNTER(motor_tim[i], 0);
-                // }
-            }
-            break;
-        }
-    }
-}

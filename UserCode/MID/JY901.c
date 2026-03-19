@@ -1,5 +1,6 @@
 ﻿#include "JY901.h"
 #include <string.h>
+#include <stdio.h>
 #include "usart.h"
 #include "dma.h"
 
@@ -12,7 +13,6 @@ jy901_data_t* data = &jy901_data;  //定义指向jy901_data的指针变量
 
 uint8_t JY_RxBuffer[JY_Buffer_Size];
 
-static void JY901_Feed(uint8_t byte);
 static void JY901_Data_Convert(const jy901_raw_t *raw, jy901_data_t *out);
 
 /**
@@ -32,13 +32,11 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     if (huart->Instance == jy901_uart.huart->Instance)
     {
-        /* Size = 本次 DMA 实际收到的字节数 */
-        for (uint16_t i = 0; i < Size; i++)
-        {
-            uint8_t byte = JY_RxBuffer[i];
-            /* 喂给 JY901 协议解析 */
-            JY901_Feed(byte);
-        }
+        jy901_uart.data_ready = 1; // 标记数据已准备好
+        jy901_uart.received_byte = Size; // 接收到的字节数
+
+        HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);
+        
     }
 }
 
@@ -166,4 +164,19 @@ static void JY901_Data_Convert(const jy901_raw_t *raw, jy901_data_t *out)
     out->roll  = raw->roll  / 32768.0f * 180.0f;
     out->pitch = raw->pitch / 32768.0f * 180.0f;
     out->yaw   = raw->yaw   / 32768.0f * 180.0f;
+}
+
+void JY901_Task(void)
+{
+    if(jy901_uart.data_ready)
+    {
+        /* Size = 本次 DMA 实际收到的字节数 */
+        for (uint16_t i = 0; i < jy901_uart.received_byte; i++)
+        {
+            uint8_t byte = JY_RxBuffer[i];
+            /* 喂给 JY901 协议解析 */
+            JY901_Feed(byte);
+        }
+        jy901_uart.data_ready = 0; // 清除数据准备好标志
+    }
 }

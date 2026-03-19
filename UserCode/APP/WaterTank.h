@@ -1,5 +1,5 @@
-#ifndef __CONTROL_H
-#define __CONTROL_H
+#ifndef __WATER_TANK_H
+#define __WATER_TANK_H
 
 #include "H_Tmc2209.h"
 #include <stdio.h>
@@ -59,7 +59,7 @@ void Water_Tank_Filling(water_tank_t *tank, float delta_xML);
 void Water_Tank_Draining(water_tank_t *tank, float delta_xML);
 void Water_Tank_Fill_To(water_tank_t *tank, float target_xML);
 void Water_Tank_Drain_TO(water_tank_t *tank, float target_xML);
-void Water_Tank_Draning_To_Empty(water_tank_t *tank);
+void Water_Tank_Draining_To_Empty(water_tank_t *tank);
 void Load_Water_Volume(water_tank_t *tank);
 void Water_Tank_Update_Handler(water_tank_t *tank);
 

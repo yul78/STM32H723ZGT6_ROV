@@ -7,6 +7,8 @@ water_tank_t tank_rear;
 
 extern uint8_t rx_data;
 
+void Draining_Test(void);
+
 /**
  * @brief 前后两个水舱初始化
  */
@@ -40,8 +42,9 @@ void Water_Tank_Init(void)
         tank_rear.state = TANK_EMPTY;
     }
     
-    Water_Tank_Draning_To_Empty(&tank_front);
-    //Water_Tank_Draning_To_Empty(&tank_rear);
+    // Water_Tank_Draning_To_Empty(&tank_front);
+    // Water_Tank_Draning_To_Empty(&tank_rear);
+    Draining_Test();
 }
 
 /**
@@ -80,7 +83,7 @@ void Water_Tank_Draining(water_tank_t *tank, float delta_xML)
     Load_Water_Volume(tank);
 }
 
-void Water_Tank_Draning_To_Empty(water_tank_t *tank)
+void Water_Tank_Draining_To_Empty(water_tank_t *tank)
 {
     if(tank->state == TANK_EMPTY) return;
 
@@ -96,15 +99,60 @@ void Water_Tank_Draning_To_Empty(water_tank_t *tank)
             Motor[tank->connect_motor_num].current_step = 0;
             break;
         }
-        tank->target_water_volume = tank->now_water_volume - 0.1f; //每次排1ml水
+        tank->target_water_volume = tank->now_water_volume - 0.1f; //每次排0.1ml水
         tank->state = TANK_DRAINING;
         Load_Water_Volume(tank);
-        uint16_t delay_time_ms = 0.1f / tank->water_velocity * 1000.0f; //根据水速计算每1ml水的排空时间
+        uint16_t delay_time_ms = 0.1f / tank->water_velocity * 1000.0f; //根据水速计算每0.1ml水的排空时间
         delay_ms(delay_time_ms);
         
     }
 }
 
+void Draining_Test(void)
+{
+    while(1)
+    {
+        if(tank_front.state == TANK_EMPTY && tank_rear.state == TANK_EMPTY) return;
+        else
+        {
+            if(tank_front.event_empty)
+            {
+                tank_front.event_empty = 0;
+                tank_front.state = TANK_EMPTY;
+                tank_front.now_water_volume = 0;
+                Motor_Stop(tank_front.connect_motor_num);
+                tank_front.last_finished_steps = 0;
+                Motor[tank_front.connect_motor_num].current_step = 0;
+            }
+            if(tank_rear.event_empty)
+            {
+                tank_rear.event_empty = 0;
+                tank_rear.state = TANK_EMPTY;
+                tank_rear.now_water_volume = 0;
+                Motor_Stop(tank_rear.connect_motor_num);
+                tank_rear.last_finished_steps = 0;
+                Motor[tank_rear.connect_motor_num].current_step = 0;
+            }
+
+            if(tank_front.state != TANK_EMPTY)
+            {
+                tank_front.target_water_volume = tank_front.now_water_volume - 0.1f; //每次排0.1ml水
+                tank_front.state = TANK_DRAINING;
+                Load_Water_Volume(&tank_front);
+            }
+            if(tank_rear.state != TANK_EMPTY)
+            {
+                tank_rear.target_water_volume = tank_rear.now_water_volume - 0.1f; //每次排0.1ml水
+                tank_rear.state = TANK_DRAINING;
+                Load_Water_Volume(&tank_rear);
+            }
+
+            double min_velocity = tank_front.water_velocity < tank_rear.water_velocity ? tank_front.water_velocity : tank_rear.water_velocity;
+            uint16_t delay_time_ms = 0.1f / min_velocity * 1000.0f; //根据水速计算每0.1ml水的排空时间
+            delay_ms(delay_time_ms);
+        }
+    }
+}
 /**
  * @brief 监控水舱实时变化
  * @param tank 指定水舱的结构体指针
@@ -159,9 +207,11 @@ void Water_Tank_Update_Handler(water_tank_t *tank)
         }
         tank->last_finished_steps = current_finished_steps; //为下次做准备
 
+        
     }
     else
     {
+        
         // 动作完成后的状态切换
         // 如果电机停了，且目前是注/排状态，切换回 MID，同时清零上次完成的步数
         if (tank->state == TANK_FILLING || tank->state == TANK_DRAINING)
@@ -229,7 +279,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if(huart == &huart4)
+    if(huart == &huart3)
     {
         if(rx_data == 0x02)
             Water_Tank_Draining(&tank_front, 1.0f);
@@ -240,6 +290,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         else if(rx_data == 0x04)
             Water_Tank_Draining(&tank_rear, 1.0f);
         //OLED_ShowNum(64, 32, 0, 1, OLED_8X16);
-        HAL_UART_Receive_IT(&huart4, &rx_data, 1); //开启UART中断接收
+        HAL_UART_Receive_IT(&huart3, &rx_data, 1); //开启UART中断接收
     }
 }

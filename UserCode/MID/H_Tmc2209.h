@@ -1,5 +1,5 @@
-﻿#ifndef __H_TMC2209_H__
-#define __H_TMC2209_H__
+﻿#ifndef __H_TMC2209_H
+#define __H_TMC2209_H
 
 #include "gpio.h"
 #include "math.h"
@@ -16,7 +16,7 @@ typedef struct {
     uint8_t en;
     GPIO_PinState dir;
     uint16_t hz;
-    uint32_t current_step;
+    volatile uint32_t current_step;
     uint32_t target_step;
     uint32_t arr;
     MotionStep steps;
@@ -25,7 +25,9 @@ typedef struct {
 
 // 外部声明全局数组
 #define MOTOR_NUM 3  // 电机编号从 1~6，索引0不使用
-extern TIM_HandleTypeDef* motor_htim[MOTOR_NUM];
+/* 定时器句柄数组，由 H_Tmc2209.c 定义为 motor_tim，
+   头文件以前误写为 motor_htim，导致链接错误。 */
+extern TIM_HandleTypeDef *motor_tim[];
 extern uint32_t motor_channel[MOTOR_NUM];
 extern GPIO_TypeDef* motor_en_port[MOTOR_NUM];
 extern uint16_t motor_en_pin[MOTOR_NUM];

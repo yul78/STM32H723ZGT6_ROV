@@ -3,15 +3,15 @@
 
 /*****************JY901S驱动板级设置部分*****************/
 
-#define huart_jy901 huart2                   //JY901S连接的USART句柄
-#define hdma_jy901_rx (huart2.hdmarx)        //JY901S连接的USART的DMA接收句柄
+#define huart_jy901 huart1                   //JY901S连接的USART句柄
+#define hdma_jy901_rx (huart1.hdmarx)        //JY901S连接的USART的DMA接收句柄
 /*******************************************************/
 
 #include "main.h"
 
-
 #define JY_Buffer_Size  256
 
+void JY901_Task(void);
 
 /* JY901 原始数据结构 */
 typedef struct 
@@ -51,6 +51,9 @@ typedef struct
 {
     UART_HandleTypeDef *huart;
     DMA_HandleTypeDef  *hdma_rx;
+
+    uint8_t received_byte;
+    uint8_t data_ready;
 } jy901_uart_t;
 
 
