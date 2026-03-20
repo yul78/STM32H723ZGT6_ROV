@@ -2,8 +2,31 @@
 #include "H_Tmc2209.h"
 #include "WaterTank.h"
 
-static volatile uint8_t drone_balance_control_flag = 0; // 1������Ҫ����ƽ����ƺ�����0�����������ƽ����ƺ���
+static volatile uint8_t drone_balance_control_flag = 0; // 1代表需要调用平衡控制函数，0代表无需调用平衡控制函数
 
+/**
+ * @brief 游戏手柄控制函数
+ */
+void Gamepad_Control(void)
+{
+    GamepadData_t *Gamepad_raw_data = Gamepad_GetData();
+    Analysis_GamepadData_t Gamepad_analysis_data;
+    GamepadData_Analysis(Gamepad_raw_data, &Gamepad_analysis_data);
+
+    // 根据分析后的数据进行速度控制
+    FOC_Set_Speed(1, Gamepad_analysis_data.leftX);
+    FOC_Set_Speed(2, Gamepad_analysis_data.leftY);
+}
+
+/**
+ * @brief 设置FOC速度
+ * @param motor_num 电机编号,1电机是左右方向推进器，2电机是前后垂直推进器
+ * @param speed 速度值，范围-1500~1500，正数代表正转，负数代表反转，绝对值越大速度越快
+ */
+void FOC_Set_Speed(uint8_t motor_num, int16_t speed)
+{
+  
+}
 
 void Drone_Balance_Control(void)
 {
@@ -25,46 +48,4 @@ uint8_t Scheduler_Get_DroneBalanceControlFlag(void)
   return 0;
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  if(htim == &htim3) //10ms��ʱ���ж�
-  {
-    static uint16_t cnt = 0;
-    cnt++;
-    if(cnt >= 10)
-    {
-      Scheduler_Set_DroneBalanceControlFlag(); //ÿ100ms��һ��ƽ����Ʊ�־λ
-      cnt = 0;
-    }
-  }
-  else if(htim == motor_tim[1] || htim == motor_tim[2])
-  {
-    for (int i = 1; i <= 2; i++)
-    {
-        if (htim == motor_tim[i])
-        {
-            if (Motor[i].mode == Constant_step && Motor[i].target_step)
-            {
-                Motor[i].current_step++;
-                if (Motor[i].current_step >= Motor[i].target_step)
-                {
-                    // Motor[i].current_step = 0;
-                    Motor[i].target_step = 0;
-                    // HAL_GPIO_WritePin(en_ports[i], en_pins[i], GPIO_PIN_RESET);
-                    HAL_TIM_Base_Stop_IT(motor_tim[i]);
-                    HAL_TIM_PWM_Stop(motor_tim[i], motor_channel[i]);
-                }
-                // else
-                // {
-                //     Motor[i].hz = get_step_speed(Motor[i].current_step, Motor[i].steps, Motor[i].velocity);
-                //     uint16_t arr = (TIMER_CLK_HZ / Motor[i].hz) - 1;
-                //     __HAL_TIM_SET_AUTORELOAD(motor_tim[i], arr);
-                //     __HAL_TIM_SET_COMPARE(motor_tim[i], motor_channel[i], arr / 2);
-                //     __HAL_TIM_SET_COUNTER(motor_tim[i], 0);
-                // }
-            }
-            break;
-        }
-    }
-  }
-}
+

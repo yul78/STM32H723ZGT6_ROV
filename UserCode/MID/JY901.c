@@ -28,19 +28,6 @@ void JY901_Init(void)
     __HAL_DMA_DISABLE_IT(jy901_uart.hdma_rx, DMA_IT_HT);                           //关闭DMA的半传输中断
 }
 
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-{
-    if (huart->Instance == jy901_uart.huart->Instance)
-    {
-        jy901_uart.data_ready = 1; // 标记数据已准备好
-        jy901_uart.received_byte = Size; // 接收到的字节数
-
-        HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);
-        
-    }
-}
-
-
 // /**
 //  * @brief 通过 USART4 发送一个完整的数据帧
 //  * @param buf 数据帧缓冲区指针

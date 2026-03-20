@@ -33,7 +33,8 @@
 #include "JY901.h"
 #include "WaterADC.h"
 #include "WaterTank.h"
-
+#include "interrupt.h"
+#include "Gamepad.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,7 +56,6 @@
 
 /* USER CODE BEGIN PV */
 
-uint8_t rx_data;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,6 +118,7 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  Gamepad_Init(&gamepad_huart);  // 手柄初始化,绑定 USART3
   OLED_Init();
   MPU6050_Init();
   JY901_Init();
@@ -127,12 +128,38 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
- 
-  HAL_UART_Receive_IT(&huart3, &rx_data, 1); //开启UART中断接收
-
+  GamepadData_t *pad;
   while (1)
   {
     JY901_Task();
+
+    pad = Gamepad_GetData();
+    if (pad->isUpdated)
+		{
+			pad->isUpdated = 0;  // 清除标志
+			// ========= 使用手柄数据 =========
+    }
+
+    /************* OLED显示手柄数据 *************/
+    // OLED_ShowString(0, 0, "LX:", OLED_8X16);
+    // OLED_ShowString(0, 16, "LY:", OLED_8X16);
+    // OLED_ShowString(56, 0, "RX:", OLED_8X16);
+    // OLED_ShowString(56, 16, "RY:", OLED_8X16);
+    // OLED_ShowString(0, 32, "btn:", OLED_8X16);
+    // OLED_ShowString(0, 48, "hatX:", OLED_8X16);
+    // OLED_ShowString(56, 48, "hatY:", OLED_8X16);
+    // OLED_ShowNum(24, 0, pad->leftX, 3, OLED_8X16);
+    // OLED_ShowNum(24, 16, pad->leftY, 3, OLED_8X16);
+
+    // OLED_ShowNum(80, 0, pad->rightX, 3, OLED_8X16);
+    // OLED_ShowNum(80, 16, pad->rightY, 3, OLED_8X16);
+
+    // OLED_ShowNum(32, 32, pad->buttons, 4, OLED_8X16);
+    // OLED_ShowNum(40, 48, pad->hatX, 1, OLED_8X16);
+    // OLED_ShowNum(96, 48, pad->hatY, 1, OLED_8X16);
+
+    // OLED_ShowNum(72, 32, pad->lt, 2, OLED_8X16);
+    // OLED_ShowNum(96, 32, pad->rt, 2, OLED_8X16);
     //OLED_ShowString(0,0,"hello,723!",OLED_8X16);
     
     /************* OLED显示JY901S物理数据 *************/
@@ -145,8 +172,8 @@ int main(void)
     // OLED_ShowFloatNum(0, 32, jy901_data.gz, 2, 2, OLED_8X16);     // Z轴角速度（单位：度每秒）
 
     OLED_ShowFloatNum(0, 0, jy901_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
-    //OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
-    //OLED_ShowFloatNum(0, 32, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
+    // OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
+    // OLED_ShowFloatNum(0, 32, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
 
     /************* OLED显示MPU6050物理数据 *************/
     //MPU6050_GetData();
@@ -204,7 +231,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-     OLED_Update();
+    OLED_Update();
 
     Water_Tank_Update_Handler(&tank_front);
     Water_Tank_Update_Handler(&tank_rear);

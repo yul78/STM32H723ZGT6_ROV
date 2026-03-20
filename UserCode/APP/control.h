@@ -2,7 +2,12 @@
 #define __CONTROL_H
 
 #include "main.h"
+#include "gamepad.h"
 
+void Gamepad_Control(void);
+void FOC_Set_Speed(uint8_t motor_num, int16_t speed);
+void speed_control(uint8_t speed_X, uint8_t speed_Y);
+void Scheduler_Set_DroneBalanceControlFlag(void);
 uint8_t Scheduler_Get_DroneBalanceControlFlag(void);
 
 #endif

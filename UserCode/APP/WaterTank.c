@@ -5,8 +5,6 @@
 water_tank_t tank_front;  
 water_tank_t tank_rear;   
 
-extern uint8_t rx_data;
-
 void Draining_Test(void);
 
 /**
@@ -271,25 +269,5 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if(GPIO_Pin == tank_rear_empty_Pin)
     {
         tank_rear.event_empty = 1;
-    }
-}
-
-/**
- * @brief 串口指令接收对应的回调函数
- */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if(huart == &huart3)
-    {
-        if(rx_data == 0x02)
-            Water_Tank_Draining(&tank_front, 1.0f);
-        else if(rx_data == 0x01)
-            Water_Tank_Filling(&tank_front, 1.0f);
-        else if(rx_data == 0x03)
-            Water_Tank_Filling(&tank_rear, 1.0f);
-        else if(rx_data == 0x04)
-            Water_Tank_Draining(&tank_rear, 1.0f);
-        //OLED_ShowNum(64, 32, 0, 1, OLED_8X16);
-        HAL_UART_Receive_IT(&huart3, &rx_data, 1); //开启UART中断接收
     }
 }
