@@ -6,5 +6,6 @@
 #include "gamepad.h"
 #include "control.h"
 #include "JY901.h"
+#include "bsp_gps.h"
 
 #endif

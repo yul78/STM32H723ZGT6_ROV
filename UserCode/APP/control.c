@@ -1,6 +1,7 @@
 #include "control.h"
-#include "H_Tmc2209.h"
-#include "WaterTank.h"
+
+#define ELEVATION_ANGLE_THRESHOLD 10.0f   //仰角阈值，单位：度，超过这个值就认为需要进行平衡控制
+#define DEPRESSION_ANGLE_THRESHOLD -10.0f //俯角阈值，单位：度，超过这个值就认为需要进行平衡控制
 
 static volatile uint8_t drone_balance_control_flag = 0; // 1代表需要调用平衡控制函数，0代表无需调用平衡控制函数
 
@@ -30,7 +31,24 @@ void FOC_Set_Speed(uint8_t motor_num, int16_t speed)
 
 void Drone_Balance_Control(void)
 {
-  
+  if(Scheduler_Get_DroneBalanceControlFlag())
+  {
+    if(jy901_data.roll > ELEVATION_ANGLE_THRESHOLD) //仰角过大
+    {
+      Water_Tank_Filling(&tank_front, 0.5f); //前水舱进水
+      Water_Tank_Draining(&tank_rear, 0.5f); //后水舱排水
+    }
+    if(jy901_data.roll < DEPRESSION_ANGLE_THRESHOLD) //俯角过大
+    {
+      Water_Tank_Filling(&tank_rear, 0.5f); //后水舱进水
+      Water_Tank_Draining(&tank_front, 0.5f); //前水舱排水
+    }
+  }
+  else
+  {
+    //不需要调用平衡控制函数，直接返回
+    return;
+  }
 }
 
 void Scheduler_Set_DroneBalanceControlFlag(void)

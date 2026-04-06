@@ -1,5 +1,6 @@
 #include "interrupt.h"
 
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim == &htim3) //10ms定时器中断
@@ -54,6 +55,14 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);
         
     }
+
+     if (huart->Instance == bsp_gps_state.huart->Instance)
+    {
+        /* 中断里仅做单字节入队和重新挂接收，避免拉长中断时间。 */
+        bsp_gps_state.received_byte = 1U;
+        BSP_GPS_WriteFifo(bsp_gps_rx_byte);
+        HAL_UART_Receive_IT(bsp_gps_state.huart, &bsp_gps_rx_byte, 1U);
+    }
 }
 
 /**
@@ -80,5 +89,19 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
         // 重新开启接收
         HAL_UART_Receive_IT(huart, &gamepad_rxByte, 1);
+    }
+}
+
+/**
+ * @brief 串口错误回调，用于清错并恢复接收。
+ * @param huart 触发错误的串口句柄。
+ */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == bsp_gps_state.huart->Instance)
+    {
+        __HAL_UART_CLEAR_FLAG(bsp_gps_state.huart, UART_FLAG_ORE | UART_FLAG_NE | UART_FLAG_FE | UART_FLAG_PE);
+        HAL_UART_AbortReceive(bsp_gps_state.huart);
+        HAL_UART_Receive_IT(bsp_gps_state.huart, &bsp_gps_rx_byte, 1U);
     }
 }

@@ -1,6 +1,6 @@
 #include "WaterTank.h"
 
-#define Water_Volume_Percircle 1.0f  //²½½øµç»úÃ¿×ªÒ»È¦¶ÔÓ¦µÄË®Á¿±ä»¯Öµ£¬µ¥Î»£ºml/È¦
+#define Water_Volume_Percircle 1.0f  //æ­¥è¿›ç”µæœºæ¯è½¬ä¸€åœˆå¯¹åº”çš„æ°´é‡å˜åŒ–å€¼ï¼Œå•ä½ï¼šml/åœˆ
 
 water_tank_t tank_front;  
 water_tank_t tank_rear;   
@@ -8,23 +8,23 @@ water_tank_t tank_rear;
 void Draining_Test(void);
 
 /**
- * @brief Ç°ºóÁ½¸öË®²Õ³õÊ¼»¯
+ * @brief å‰åä¸¤ä¸ªæ°´èˆ±åˆå§‹åŒ–
  */
 void Water_Tank_Init(void)
 {
-    // Á´½Ó²½½øµç»ú
+    // é“¾æ¥æ­¥è¿›ç”µæœº
     tank_front.connect_motor_num = 1;   
     tank_rear.connect_motor_num = 2;
 
-    // ³õÊ¼Ë®Á¿ÏÈÉèÖÃÎª0
+    // åˆå§‹æ°´é‡å…ˆè®¾ç½®ä¸º0
     tank_front.start_water_volume = 0;  
     tank_rear.start_water_volume = 0;
     
-    // °Ñµ±Ç°Ë®Á¿ÉèÖÃÎª³õÊ¼Ë®Á¿
+    // æŠŠå½“å‰æ°´é‡è®¾ç½®ä¸ºåˆå§‹æ°´é‡
     tank_front.now_water_volume = tank_front.start_water_volume; 
     tank_rear.now_water_volume = tank_rear.start_water_volume;
 
-    // ÉèÖÃÍÌÍÂË®ËÙ¶È£¬µ¥Î»£ºml/s
+    // è®¾ç½®ååæ°´é€Ÿåº¦ï¼Œå•ä½ï¼šml/s
     tank_front.water_velocity = 1.0;
     tank_rear.water_velocity = 1.0;
 
@@ -46,9 +46,9 @@ void Water_Tank_Init(void)
 }
 
 /**
- * @brief Ë®²Õ½øË®¿ØÖÆº¯Êı
- * @param tank Ö¸¶¨Ë®²ÕµÄ½á¹¹ÌåÖ¸Õë
- * @param delta_xML ½øË®Á¿
+ * @brief æ°´èˆ±è¿›æ°´æ§åˆ¶å‡½æ•°
+ * @param tank æŒ‡å®šæ°´èˆ±çš„ç»“æ„ä½“æŒ‡é’ˆ
+ * @param delta_xML è¿›æ°´é‡
  */
 void Water_Tank_Filling(water_tank_t *tank, float delta_xML)
 {
@@ -58,15 +58,15 @@ void Water_Tank_Filling(water_tank_t *tank, float delta_xML)
 
     tank->target_water_volume = tank->now_water_volume + delta_xML;
     
-    // ÉèÖÃ×´Ì¬£¬Load_Water_Volume ÄÚ²¿»áÆô¶¯µç»ú
+    // è®¾ç½®çŠ¶æ€ï¼ŒLoad_Water_Volume å†…éƒ¨ä¼šå¯åŠ¨ç”µæœº
     tank->state = TANK_FILLING; 
     Load_Water_Volume(tank);
 }
 
 /**
- * @brief Ë®²ÕÅÅË®¿ØÖÆº¯Êı
- * @param tank Ö¸¶¨Ë®²ÕµÄ½á¹¹ÌåÖ¸Õë
- * @param delta_xML ÅÅË®Á¿
+ * @brief æ°´èˆ±æ’æ°´æ§åˆ¶å‡½æ•°
+ * @param tank æŒ‡å®šæ°´èˆ±çš„ç»“æ„ä½“æŒ‡é’ˆ
+ * @param delta_xML æ’æ°´é‡
  */
 void Water_Tank_Draining(water_tank_t *tank, float delta_xML)
 {
@@ -76,7 +76,7 @@ void Water_Tank_Draining(water_tank_t *tank, float delta_xML)
 
     tank->target_water_volume = tank->now_water_volume - delta_xML;
     
-    // ÉèÖÃ×´Ì¬
+    // è®¾ç½®çŠ¶æ€
     tank->state = TANK_DRAINING;
     Load_Water_Volume(tank);
 }
@@ -97,10 +97,10 @@ void Water_Tank_Draining_To_Empty(water_tank_t *tank)
             Motor[tank->connect_motor_num].current_step = 0;
             break;
         }
-        tank->target_water_volume = tank->now_water_volume - 0.1f; //Ã¿´ÎÅÅ0.1mlË®
+        tank->target_water_volume = tank->now_water_volume - 0.1f; //æ¯æ¬¡æ’0.1mlæ°´
         tank->state = TANK_DRAINING;
         Load_Water_Volume(tank);
-        uint16_t delay_time_ms = 0.1f / tank->water_velocity * 1000.0f; //¸ù¾İË®ËÙ¼ÆËãÃ¿0.1mlË®µÄÅÅ¿ÕÊ±¼ä
+        uint16_t delay_time_ms = 0.1f / tank->water_velocity * 1000.0f; //æ ¹æ®æ°´é€Ÿè®¡ç®—æ¯0.1mlæ°´çš„æ’ç©ºæ—¶é—´
         delay_ms(delay_time_ms);
         
     }
@@ -134,84 +134,84 @@ void Draining_Test(void)
 
             if(tank_front.state != TANK_EMPTY)
             {
-                tank_front.target_water_volume = tank_front.now_water_volume - 0.1f; //Ã¿´ÎÅÅ0.1mlË®
+                tank_front.target_water_volume = tank_front.now_water_volume - 0.1f; //æ¯æ¬¡æ’0.1mlæ°´
                 tank_front.state = TANK_DRAINING;
                 Load_Water_Volume(&tank_front);
             }
             if(tank_rear.state != TANK_EMPTY)
             {
-                tank_rear.target_water_volume = tank_rear.now_water_volume - 0.1f; //Ã¿´ÎÅÅ0.1mlË®
+                tank_rear.target_water_volume = tank_rear.now_water_volume - 0.1f; //æ¯æ¬¡æ’0.1mlæ°´
                 tank_rear.state = TANK_DRAINING;
                 Load_Water_Volume(&tank_rear);
             }
 
             double min_velocity = tank_front.water_velocity < tank_rear.water_velocity ? tank_front.water_velocity : tank_rear.water_velocity;
-            uint16_t delay_time_ms = 0.1f / min_velocity * 1000.0f; //¸ù¾İË®ËÙ¼ÆËãÃ¿0.1mlË®µÄÅÅ¿ÕÊ±¼ä
+            uint16_t delay_time_ms = 0.1f / min_velocity * 1000.0f; //æ ¹æ®æ°´é€Ÿè®¡ç®—æ¯0.1mlæ°´çš„æ’ç©ºæ—¶é—´
             delay_ms(delay_time_ms);
         }
     }
 }
 /**
- * @brief ¼à¿ØË®²ÕÊµÊ±±ä»¯
- * @param tank Ö¸¶¨Ë®²ÕµÄ½á¹¹ÌåÖ¸Õë
+ * @brief ç›‘æ§æ°´èˆ±å®æ—¶çŠ¶æ€å˜åŒ–
+ * @param tank æŒ‡å®šæ°´èˆ±çš„ç»“æ„ä½“æŒ‡é’ˆ
  */
 void Water_Tank_Update_Handler(water_tank_t *tank)
 {
-    if(tank->state == TANK_DRAINING && tank->now_water_volume <= 0.01f)  //ÅÅË®ÖÁ¿Õ£¬Ôò²úÉú¿ÕË®ÊÂ¼ş
+    if(tank->state == TANK_DRAINING && tank->now_water_volume <= 0.01f)  //æ’æ°´è‡³ç©ºï¼Œåˆ™äº§ç”Ÿç©ºæ°´äº‹ä»¶
     {
         tank->event_empty = 1;
     }
-    /*Âú/¿ÕÊÂ¼ş´¥·¢´¦Àí£¨×î¸ßÓÅÏÈ¼¶×´Ì¬ÇĞ»»*/
+    /*æ»¡/ç©ºäº‹ä»¶è§¦å‘å¤„ç†ï¼ˆæœ€é«˜ä¼˜å…ˆçº§çŠ¶æ€åˆ‡æ¢*/
     if (tank->event_full)
     {
-        tank->event_full = 0;                // Çå¿ÕÂúË®ÊÂ¼ş
-        tank->state = TANK_FULL;             // ÉèÖÃÂúË®×´Ì¬
-        Motor_Stop(tank->connect_motor_num); // Á¢¼´Í£Ö¹µç»ú
-        tank->last_finished_steps = 0;       // Ë®²Õ¶ÔÓ¦µÄ²½½øµç»úÊµÊ±Íê³ÉµÄ²½ÊıÇåÁã
-        Motor[tank->connect_motor_num].current_step = 0; // µç»úµ±Ç°²½ÊıÇåÁã
+        tank->event_full = 0;                // æ¸…ç©ºæ»¡æ°´äº‹ä»¶
+        tank->state = TANK_FULL;             // è®¾ç½®æ»¡æ°´çŠ¶æ€
+        Motor_Stop(tank->connect_motor_num); // ç«‹å³åœæ­¢ç”µæœº
+        tank->last_finished_steps = 0;       // æ°´èˆ±å¯¹åº”çš„æ­¥è¿›ç”µæœºå®æ—¶å®Œæˆçš„æ­¥æ•°æ¸…é›¶
+        Motor[tank->connect_motor_num].current_step = 0; // ç”µæœºå½“å‰æ­¥æ•°æ¸…é›¶
         return; 
     }
     if (tank->event_empty)
     {
-        tank->event_empty = 0;               // Çå¿Õ¿ÕË®ÊÂ¼ş
-        tank->state = TANK_EMPTY;            // ÉèÖÃ¿ÕË®×´Ì¬
-        tank->now_water_volume = 0;          // ÎïÀíĞ£×¼£ºÅöµ½¿ÕÏŞÎ»£¬Ë®Á¿Ç¿ÖÆ¹éÁã
-        Motor_Stop(tank->connect_motor_num); // Á¢¼´Í£Ö¹µç»ú
-        tank->last_finished_steps = 0;       // Ë®²Õ¶ÔÓ¦µÄ²½½øµç»úÊµÊ±Íê³ÉµÄ²½ÊıÇåÁã
-        Motor[tank->connect_motor_num].current_step = 0; // µç»úµ±Ç°²½ÊıÇåÁã
+        tank->event_empty = 0;               // æ¸…ç©ºç©ºæ°´äº‹ä»¶
+        tank->state = TANK_EMPTY;            // è®¾ç½®ç©ºæ°´çŠ¶æ€
+        tank->now_water_volume = 0;          // ç‰©ç†æ ¡å‡†ï¼šç¢°åˆ°ç©ºé™ä½ï¼Œæ°´é‡å¼ºåˆ¶å½’é›¶
+        Motor_Stop(tank->connect_motor_num); // ç«‹å³åœæ­¢ç”µæœº
+        tank->last_finished_steps = 0;       // æ°´èˆ±å¯¹åº”çš„æ­¥è¿›ç”µæœºå®æ—¶å®Œæˆçš„æ­¥æ•°æ¸…é›¶
+        Motor[tank->connect_motor_num].current_step = 0; // ç”µæœºå½“å‰æ­¥æ•°æ¸…é›¶
         return;
     }
 
-    /*ÊµÊ±Ë®Á¿¸üĞÂ*/
-    uint32_t current_finished_steps = 0;  //»ñÈ¡Ë®²Õ¶ÔÓ¦µÄ²½½øµç»úµÄÊµÊ±Íê³ÉµÄ²½Êı
+    /*å®æ—¶æ°´é‡æ›´æ–°*/
+    uint32_t current_finished_steps = 0;  //è·å–æ°´èˆ±å¯¹åº”çš„æ­¥è¿›ç”µæœºçš„å®æ—¶å®Œæˆçš„æ­¥æ•°
     if(tank->connect_motor_num == 1)      current_finished_steps = Motor_GetStep(1);
     else if(tank->connect_motor_num == 2) current_finished_steps = Motor_GetStep(2); 
 
-    if (current_finished_steps > tank->last_finished_steps)       //µ±²½½øµç»úÓĞÒÑÍê³ÉµÄ²½ÊıÊ±£¬¾Í¸üĞÂË®²ÕË®Á¿
+    if (current_finished_steps > tank->last_finished_steps)       //å½“æ­¥è¿›ç”µæœºæœ‰å·²å®Œæˆçš„æ­¥æ•°æ—¶ï¼Œå°±æ›´æ–°æ°´èˆ±æ°´é‡
     {   
-        uint32_t delta_step = 0;          //¦¤²½Êı
-        double delta_volume = 0.0f;        //¦¤Ë®Á¿
+        uint32_t delta_step = 0;          //Î”æ­¥æ•°
+        double delta_volume = 0.0f;        //Î”æ°´é‡
 
-        delta_step = current_finished_steps - tank->last_finished_steps; //¦¤²½Êı = µ±Ç°ÒÑÍê³ÉµÄ²½Êı - ÉÏ´ÎÒÑÍê³ÉµÄ²½Êı
-        delta_volume = (double)delta_step / (double)pulse_percircle * Water_Volume_Percircle; //¦¤²½Êı ==> ¦¤Ë®Á¿
+        delta_step = current_finished_steps - tank->last_finished_steps; //Î”æ­¥æ•° = å½“å‰å·²å®Œæˆçš„æ­¥æ•° - ä¸Šæ¬¡å·²å®Œæˆçš„æ­¥æ•°
+        delta_volume = (double)delta_step / (double)pulse_percircle * Water_Volume_Percircle; //Î”æ­¥æ•° ==> Î”æ°´é‡
 
-        if(tank->state == TANK_DRAINING) //ÅÅË®×´Ì¬£¬Ä¿±êË®Á¿ = µ±Ç°Ë®Á¿ - ¦¤Ë®Á¿
+        if(tank->state == TANK_DRAINING) //æ’æ°´çŠ¶æ€ï¼Œç›®æ ‡æ°´é‡ = å½“å‰æ°´é‡ - Î”æ°´é‡
         {
             tank->now_water_volume = tank->now_water_volume - delta_volume;
         }
-        else if(tank->state == TANK_FILLING) //½øË®×´Ì¬£¬Ä¿±êË®Á¿ = µ±Ç°Ë®Á¿ + ¦¤Ë®Á¿
+        else if(tank->state == TANK_FILLING) //è¿›æ°´çŠ¶æ€ï¼Œç›®æ ‡æ°´é‡ = å½“å‰æ°´é‡ + Î”æ°´é‡
         {
             tank->now_water_volume = tank->now_water_volume + delta_volume;
         }
-        tank->last_finished_steps = current_finished_steps; //ÎªÏÂ´Î×ö×¼±¸
+        tank->last_finished_steps = current_finished_steps; //ä¸ºä¸‹æ¬¡åšå‡†å¤‡
 
         
     }
     else
     {
         
-        // ¶¯×÷Íê³ÉºóµÄ×´Ì¬ÇĞ»»
-        // Èç¹ûµç»úÍ£ÁË£¬ÇÒÄ¿Ç°ÊÇ×¢/ÅÅ×´Ì¬£¬ÇĞ»»»Ø MID£¬Í¬Ê±ÇåÁãÉÏ´ÎÍê³ÉµÄ²½Êı
+        // åŠ¨ä½œå®Œæˆåçš„çŠ¶æ€åˆ‡æ¢
+        // å¦‚æœç”µæœºåœäº†ï¼Œä¸”ç›®å‰æ˜¯æ³¨/æ’çŠ¶æ€ï¼Œåˆ‡æ¢å› MIDï¼ŒåŒæ—¶æ¸…é›¶ä¸Šæ¬¡å®Œæˆçš„æ­¥æ•°
         if (tank->state == TANK_FILLING || tank->state == TANK_DRAINING)
         {
             tank->state = TANK_MID;
@@ -221,26 +221,26 @@ void Water_Tank_Update_Handler(water_tank_t *tank)
 }
 
 /**
- * @brief ½«Ä¿±êË®Á¿×°ÔØÖÁË®²Õ
- * @param tank Ö¸¶¨µÄË®²Õ½á¹¹ÌåÖ¸Õë
+ * @brief å°†ç›®æ ‡æ°´é‡è£…è½½è‡³æ°´èˆ±
+ * @param tank æŒ‡å®šçš„æ°´èˆ±ç»“æ„ä½“æŒ‡é’ˆ
  */
 void Load_Water_Volume(water_tank_t *tank)
 {
     tank->last_finished_steps = 0;
 
-    //Ä¿±êË®Á¿ - µ±Ç°Ë®Á¿ = ¦¤Ë®Á¿
+    //ç›®æ ‡æ°´é‡ - å½“å‰æ°´é‡ = Î”æ°´é‡
     float delta_water_volume = 0.0;
     delta_water_volume = tank->target_water_volume - tank->now_water_volume;
 
-    //¦¤Ë®Á¿ ==> ¦¤step
+    //Î”æ°´é‡ ==> Î”step
     int32_t delta_step = 0;
     delta_step = (int32_t)(delta_water_volume  * (float)pulse_percircle / Water_Volume_Percircle);
 
-    //Ë®ËÙ ==> ²½½øµç»úÂö³åÆµÂÊ
+    //æ°´é€Ÿ ==> æ­¥è¿›ç”µæœºè„‰å†²é¢‘ç‡
     uint32_t step_velocity = 0;
     step_velocity = 3200 * tank->water_velocity / Water_Volume_Percircle;
 
-    //ÉèÖÃ²½½øµç»ú
+    //è®¾ç½®æ­¥è¿›ç”µæœº
     uint8_t dir = (tank->stepping_motor_polarity + 1) % 2;
     if(delta_step > 0)
         Motor_Set(tank->connect_motor_num, 2, dir, delta_step, step_velocity, 400, 2400, 800);
@@ -249,7 +249,7 @@ void Load_Water_Volume(water_tank_t *tank)
 }
 
 /**
- * @brief Î¢¶¯¿ª¹Ø¶ÔÓ¦µÄÍâ²¿ÖĞ¶ÏµÄ»Øµ÷º¯Êı
+ * @brief å¾®åŠ¨å¼€å…³å¯¹åº”çš„å¤–éƒ¨ä¸­æ–­çš„å›è°ƒå‡½æ•°
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {

@@ -35,6 +35,7 @@
 #include "WaterTank.h"
 #include "interrupt.h"
 #include "Gamepad.h"
+#include "app_gps.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -116,6 +117,7 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
   Gamepad_Init(&gamepad_huart);  // 手柄初始化,绑定 USART3
@@ -124,6 +126,8 @@ int main(void)
   JY901_Init();
   Water_Tank_Init();
   WaterADC_Init();
+  APP_GPS_Init();
+  HAL_TIM_Base_Start_IT(&htim3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -131,8 +135,7 @@ int main(void)
   GamepadData_t *pad;
   while (1)
   {
-    JY901_Task();
-
+  
     pad = Gamepad_GetData();
     if (pad->isUpdated)
 		{
@@ -163,6 +166,7 @@ int main(void)
     //OLED_ShowString(0,0,"hello,723!",OLED_8X16);
     
     /************* OLED显示JY901S物理数据 *************/
+    JY901_Task();
     // OLED_ShowFloatNum(0, 0, jy901_data.ax,2, 2, OLED_8X16);       // X轴加速度（单位：g）
     // OLED_ShowFloatNum(0, 16, jy901_data.ay,2, 2, OLED_8X16);      // Y轴加速度（单位：g）
     // OLED_ShowFloatNum(0, 32, jy901_data.az, 2, 2, OLED_8X16);     // Z轴加速度（单位：g）
@@ -171,9 +175,12 @@ int main(void)
     // OLED_ShowFloatNum(0, 16, jy901_data.gy, 2, 2, OLED_8X16);     // Y轴角速度（单位：度每秒）
     // OLED_ShowFloatNum(0, 32, jy901_data.gz, 2, 2, OLED_8X16);     // Z轴角速度（单位：度每秒）
 
-    OLED_ShowFloatNum(0, 0, jy901_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
+    //OLED_ShowFloatNum(0, 0, jy901_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
     // OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
-    // OLED_ShowFloatNum(0, 32, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
+    OLED_ShowFloatNum(0, 48, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
+
+    /************* 获取GPS数据 *************/
+    APP_GPS_Task();
 
     /************* OLED显示MPU6050物理数据 *************/
     //MPU6050_GetData();
@@ -202,8 +209,8 @@ int main(void)
       HAL_UART_Transmit(&huart3, (uint8_t*)"Draing finished...\r\n", 20, HAL_MAX_DELAY); //调试信息
       while(1);
     };
-    OLED_ShowFloatNum(0, 48, voltage_value[0], 1, 1, OLED_8X16);    
-    OLED_ShowFloatNum(64, 48,voltage_value[1], 1, 1, OLED_8X16);      
+    // OLED_ShowFloatNum(0, 48, voltage_value[0], 1, 1, OLED_8X16);    
+    // OLED_ShowFloatNum(64, 48,voltage_value[1], 1, 1, OLED_8X16);      
 
     /*********************步进电机**********************/
     // if(jy901_data.roll > 10)
@@ -233,7 +240,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
     OLED_Update();
 
-    Water_Tank_Update_Handler(&tank_front);
+    //水舱状态机更新
+    Water_Tank_Update_Handler(&tank_front); 
     Water_Tank_Update_Handler(&tank_rear);
     
   }

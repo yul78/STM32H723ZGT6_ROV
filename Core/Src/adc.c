@@ -238,7 +238,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 
     /* ADC3 DMA Init */
     /* ADC3 Init */
-    hdma_adc3.Instance = DMA1_Stream0;
+    hdma_adc3.Instance = DMA1_Stream2;
     hdma_adc3.Init.Request = DMA_REQUEST_ADC3;
     hdma_adc3.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_adc3.Init.PeriphInc = DMA_PINC_DISABLE;

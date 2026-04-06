@@ -1,13 +1,15 @@
 ﻿#ifndef __JY901_H
 #define __JY901_H
 
+#include "main.h"
+
 /*****************JY901S驱动板级设置部分*****************/
 
 #define huart_jy901 huart1                   //JY901S连接的USART句柄
 #define hdma_jy901_rx (huart1.hdmarx)        //JY901S连接的USART的DMA接收句柄
 /*******************************************************/
 
-#include "main.h"
+
 
 #define JY_Buffer_Size  256
 

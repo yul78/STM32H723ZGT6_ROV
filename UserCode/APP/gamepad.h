@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define gamepad_huart   huart3
+#define gamepad_huart   huart2
 
 // 协议定义
 #define FRAME_HEAD1     0xAA

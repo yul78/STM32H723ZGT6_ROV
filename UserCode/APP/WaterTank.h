@@ -9,43 +9,43 @@
 #include "OLED.h"
 #include "delay.h"
 
-/*к╝╡у╣дв╢л╛ц╤╬ы╠Да©*/
+/*Ф╟╢Х┬╠Г └Г┼╤Ф─│Ф· Д╦╬Е▐≤И┤▐*/
 typedef enum 
 {
     NULL_STATE = 0,
-    TANK_EMPTY,     //ря©уё╛©у╤кн╒╤╞©╙╧ь╢╔╥╒
-    TANK_DRAINING,      //уЩтзеек╝
-    TANK_MID,           //╟КбЗ╡╩©уё╛грц╩сптз╫Ьеек╝
-    TANK_FILLING,       //уЩтз╫Ьк╝
-    TANK_FULL,          //рябЗё╛бЗ╤кн╒╤╞©╙╧ь╢╔╥╒
+    TANK_EMPTY,     //Е╥╡Г╘╨О╪▄Г╘╨Г╚╞Е╬╝Е┼╗Е╪─Е┘ЁХ╖╕Е▐▒
+    TANK_DRAINING,      //Ф╜ёЕ°╗Ф▌▓Ф╟╢
+    TANK_MID,           //Е█┼Ф╩║Д╦█Г╘╨О╪▄Д╦■Ф╡║Ф°┴Е°╗Х©⌡Ф▌▓Ф╟╢
+    TANK_FILLING,       //Ф╜ёЕ°╗Х©⌡Ф╟╢
+    TANK_FULL,          //Е╥╡Ф╩║О╪▄Ф╩║Г╚╞Е╬╝Е┼╗Е╪─Е┘ЁХ╖╕Е▐▒
 }water_tank_state_t;
 
-/*к╝╡у╣д╫А╧╧лЕ╠Да©*/
+/*Ф╟╢Х┬╠Г └Г╩⌠Ф·└Д╫⌠Е▐≤И┤▐*/
 typedef struct 
 {
-    //к╝╡уа╛╫с╣д╡╫╫Ь╣Г╩З╣д╠Ю╨е
+    //Ф╟╢Х┬╠Х©·Ф▌╔Г └Ф╜╔Х©⌡Г■╣Ф°╨Г └Г╪√Е▐╥
     uint8_t connect_motor_num;
 
-    //к╝╡у╣дв╢л╛
+    //Ф╟╢Х┬╠Г └Г┼╤Ф─│
     water_tank_state_t state;
 
-    //ЁУй╪к╝а©ё╛╣╔н╩ё╨ml
+    //Е┬²Е╖▀Ф╟╢И┤▐О╪▄Е█∙Д╫█О╪ ml
     double start_water_volume;
-    //╣╠г╟к╝а©ё╛╣╔н╩ё╨ml
+    //Е╫⌠Е┴█Ф╟╢И┤▐О╪▄Е█∙Д╫█О╪ ml
     double now_water_volume;
-    //д©╠Йк╝а©ё╛╣╔н╩ё╨ml
+    //Г⌡╝Ф═┤Ф╟╢И┤▐О╪▄Е█∙Д╫█О╪ ml
     double target_water_volume;
-    //млмбк╝кы╤х,╣╔н╩ё╨ml/s
+    //Е░·Е░░Ф╟╢И─÷Е╨╕,Е█∙Д╫█О╪ ml/s
     double water_velocity;
 
-    //╤тс╕╣д╡╫╫Ь╣Г╩Зтзтк╤╞й╠рямЙЁи╣д╡╫йЩ
+    //Е╞╧Е╨■Г └Ф╜╔Х©⌡Г■╣Ф°╨Е°╗Х©░Е┼╗Ф≈╤Е╥╡Е╝▄Ф┬░Г └Ф╜╔Ф∙╟
     uint16_t last_finished_steps; 
-    //╡╫╫Ь╣Г╩З╪╚пт
+    //Ф╜╔Х©⌡Г■╣Ф°╨Ф·│Ф─╖
     uint8_t stepping_motor_polarity;
 
-    //бЗ╤кочн╩
+    //Ф╩║Г╚╞И≥░Д╫█
     volatile uint8_t event_full;  
-    //©у╤кочн╩
+    //Г╘╨Г╚╞И≥░Д╫█
     volatile uint8_t event_empty; 
 
 }water_tank_t;
