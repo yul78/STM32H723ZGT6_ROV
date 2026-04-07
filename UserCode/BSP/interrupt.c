@@ -56,13 +56,6 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         
     }
 
-     if (huart->Instance == bsp_gps_state.huart->Instance)
-    {
-        /* 中断里仅做单字节入队和重新挂接收，避免拉长中断时间。 */
-        bsp_gps_state.received_byte = 1U;
-        BSP_GPS_WriteFifo(bsp_gps_rx_byte);
-        HAL_UART_Receive_IT(bsp_gps_state.huart, &bsp_gps_rx_byte, 1U);
-    }
 }
 
 /**
@@ -70,7 +63,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if(huart == &huart3)
+    if(huart == &gamepad_huart)
     {
         #if 0
         if(rx_data == 0x02)
@@ -89,6 +82,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
         // 重新开启接收
         HAL_UART_Receive_IT(huart, &gamepad_rxByte, 1);
+    }
+
+    if (huart->Instance == bsp_gps_state.huart->Instance)
+    {
+        /* 中断里仅做单字节入队和重新挂接收，避免拉长中断时间。 */
+        bsp_gps_state.received_byte = 1U;
+        BSP_GPS_WriteFifo(bsp_gps_rx_byte);
+        HAL_UART_Receive_IT(bsp_gps_state.huart, &bsp_gps_rx_byte, 1U);
     }
 }
 

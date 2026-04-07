@@ -38,7 +38,7 @@ void BSP_GPS_Init(void)
     bsp_gps_latest_rmc_ready = 0;
 
     __HAL_UART_CLEAR_FLAG(bsp_gps_state.huart, UART_FLAG_ORE | UART_FLAG_NE | UART_FLAG_FE | UART_FLAG_PE);
-    HAL_UART_DMAStop(bsp_gps_state.huart);
+    //HAL_UART_DMAStop(bsp_gps_state.huart);
     HAL_UART_AbortReceive(bsp_gps_state.huart);
     HAL_UART_Receive_IT(bsp_gps_state.huart, &bsp_gps_rx_byte, 1U);
 }

@@ -36,6 +36,7 @@
 #include "interrupt.h"
 #include "Gamepad.h"
 #include "app_gps.h"
+#include "app_thrusters.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -118,6 +119,9 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
   MX_USART2_UART_Init();
+  MX_ADC1_Init();
+  MX_TIM8_Init();
+  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
 
   Gamepad_Init(&gamepad_huart);  // 手柄初始化,绑定 USART3
@@ -127,6 +131,7 @@ int main(void)
   Water_Tank_Init();
   WaterADC_Init();
   APP_GPS_Init();
+  APP_Thrusters_Init();
   HAL_TIM_Base_Start_IT(&htim3);
   /* USER CODE END 2 */
 
@@ -181,6 +186,9 @@ int main(void)
 
     /************* 获取GPS数据 *************/
     APP_GPS_Task();
+    char gps_info[128];
+    sprintf(gps_info, "latitude: %.6f, longitude: %.6f\r\n", gps_data.latitude, gps_data.longitude);
+    Debug_USART_Show(gps_info);
 
     /************* OLED显示MPU6050物理数据 *************/
     //MPU6050_GetData();
@@ -203,10 +211,10 @@ int main(void)
 
     if(Water_Check()) 
     {
-      HAL_UART_Transmit(&huart3, (uint8_t*)"Water detected! Start draining...\r\n", 36, HAL_MAX_DELAY); //调试信息
+      Debug_USART_Show("Water detected! Start draining...\r\n"); //调试信息
       Water_Tank_Draining_To_Empty(&tank_front);
       //Water_Tank_Draning_To_Empty(&tank_rear);
-      HAL_UART_Transmit(&huart3, (uint8_t*)"Draing finished...\r\n", 20, HAL_MAX_DELAY); //调试信息
+      Debug_USART_Show("Draing finished...\r\n"); //调试信息
       while(1);
     };
     // OLED_ShowFloatNum(0, 48, voltage_value[0], 1, 1, OLED_8X16);    
@@ -334,7 +342,10 @@ void PeriphCommonClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void Debug_USART_Show(const char* str)
+{
+    HAL_UART_Transmit(&DEBUG_huart, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+}
 /* USER CODE END 4 */
 
  /* MPU Configuration */

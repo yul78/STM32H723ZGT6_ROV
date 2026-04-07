@@ -23,7 +23,7 @@ typedef struct {
     uint8_t  lt;            // 左扳机
     uint8_t  rt;            // 右扳机
     uint8_t  isUpdated;     // 数据更新标志
-} GamepadData_t;
+}  GamepadData_t;
 
 typedef struct {
     int16_t leftX;  // 左摇杆X  (-4000~4000)

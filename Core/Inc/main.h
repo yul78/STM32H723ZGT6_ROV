@@ -54,6 +54,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void Debug_USART_Show(const char* str);
 
 /* USER CODE END EFP */
 
@@ -68,10 +69,14 @@ void Error_Handler(void);
 #define DIR2OUT_GPIO_Port GPIOA
 #define DIR1OUT_Pin GPIO_PIN_4
 #define DIR1OUT_GPIO_Port GPIOC
-#define MPU_IIC_SCL_Pin GPIO_PIN_1
-#define MPU_IIC_SCL_GPIO_Port GPIOB
+#define BM_ENB_Pin GPIO_PIN_5
+#define BM_ENB_GPIO_Port GPIOC
+#define BM_ENA_Pin GPIO_PIN_0
+#define BM_ENA_GPIO_Port GPIOB
 #define MPU_IIC_SDA_Pin GPIO_PIN_2
 #define MPU_IIC_SDA_GPIO_Port GPIOB
+#define MPU_IIC_SCL_Pin GPIO_PIN_1
+#define MPU_IIC_SCL_GPIO_Port GPIOG
 #define tank_front_full_Pin GPIO_PIN_2
 #define tank_front_full_GPIO_Port GPIOG
 #define tank_front_full_EXTI_IRQn EXTI2_IRQn
@@ -83,11 +88,13 @@ void Error_Handler(void);
 #define tank_rear_empty_Pin GPIO_PIN_5
 #define tank_rear_empty_GPIO_Port GPIOG
 #define tank_rear_empty_EXTI_IRQn EXTI9_5_IRQn
+#define LED_Pin GPIO_PIN_7
+#define LED_GPIO_Port GPIOG
 #define EN1OUT_Pin GPIO_PIN_10
 #define EN1OUT_GPIO_Port GPIOC
 
 /* USER CODE BEGIN Private defines */
-
+#define DEBUG_huart huart6
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
