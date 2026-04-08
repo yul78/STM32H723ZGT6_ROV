@@ -49,3 +49,4 @@ void APP_GPS_GetData(void)
 		gps_data.longitude = -gps_data.longitude;
 	}
 }
+

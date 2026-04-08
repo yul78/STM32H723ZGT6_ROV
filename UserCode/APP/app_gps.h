@@ -3,6 +3,7 @@
 
 #include "bsp_gps.h"
 #include "mid_gps.h"
+#include "usart.h"
 
 typedef struct 
 {

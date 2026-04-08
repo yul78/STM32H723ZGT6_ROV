@@ -124,7 +124,7 @@ int main(void)
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  Gamepad_Init(&gamepad_huart);  // 手柄初始化,绑定 USART3
+  Gamepad_Init(&gamepad_huart);  // 手柄初始化
   OLED_Init();
   MPU6050_Init();
   JY901_Init();
@@ -146,6 +146,24 @@ int main(void)
 		{
 			pad->isUpdated = 0;  // 清除标志
 			// ========= 使用手柄数据 =========
+      //Debug_USART_Show("Pad Upadate");
+      //A键：前舱吸水1ml B键：前舱排水1ml X键：后舱吸水1ml Y键：后舱排水1ml
+      if(pad->buttons == 1)
+      {
+        Water_Tank_Filling(&tank_front, 1.0f);
+      }
+      if(pad->buttons == 2)
+      {
+        Water_Tank_Draining(&tank_front, 1.0f);
+      }
+      if(pad->buttons == 4)
+      {
+        Water_Tank_Filling(&tank_rear, 1.0f);
+      }
+      if(pad->buttons == 8)
+      {
+        Water_Tank_Draining(&tank_rear, 1.0f);
+      }
     }
 
     /************* OLED显示手柄数据 *************/
@@ -187,8 +205,8 @@ int main(void)
     /************* 获取GPS数据 *************/
     APP_GPS_Task();
     char gps_info[128];
-    sprintf(gps_info, "latitude: %.6f, longitude: %.6f\r\n", gps_data.latitude, gps_data.longitude);
-    Debug_USART_Show(gps_info);
+    sprintf(gps_info, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
+    //Debug_USART_Show(gps_info);
 
     /************* OLED显示MPU6050物理数据 *************/
     //MPU6050_GetData();

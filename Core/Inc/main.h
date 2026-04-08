@@ -85,6 +85,7 @@ void Debug_USART_Show(const char* str);
 #define tank_front_empty_EXTI_IRQn EXTI3_IRQn
 #define tank_rear_full_Pin GPIO_PIN_4
 #define tank_rear_full_GPIO_Port GPIOG
+#define tank_rear_full_EXTI_IRQn EXTI4_IRQn
 #define tank_rear_empty_Pin GPIO_PIN_5
 #define tank_rear_empty_GPIO_Port GPIOG
 #define tank_rear_empty_EXTI_IRQn EXTI9_5_IRQn
