@@ -27,13 +27,10 @@
 #include "tim.h"
 #include "adc.h"
 
-uint16_t adc1_buf[2];
-uint16_t adc2_buf[2];
-
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim8;
-extern uint16_t adc2_buf[2];
-extern uint16_t adc1_buf[2];
+uint16_t adc2_buf[2];
+uint16_t adc1_buf[2];
 
 static void foc_hal_init(uint8_t num)
 {

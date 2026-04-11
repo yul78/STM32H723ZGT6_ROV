@@ -28,8 +28,8 @@ void Water_Tank_Init(void)
     tank_front.water_velocity = 1.0;
     tank_rear.water_velocity = 1.0;
 
-    tank_front.stepping_motor_polarity = 0;
-    tank_rear.stepping_motor_polarity = 1;
+    tank_front.stepping_motor_polarity = 1;
+    tank_rear.stepping_motor_polarity = 0;
 
     if(HAL_GPIO_ReadPin(tank_front_empty_GPIO_Port, tank_front_empty_Pin) == GPIO_PIN_RESET)
     {
@@ -205,7 +205,6 @@ void Water_Tank_Update_Handler(water_tank_t *tank)
         }
         tank->last_finished_steps = current_finished_steps; //为下次做准备
 
-        
     }
     else
     {

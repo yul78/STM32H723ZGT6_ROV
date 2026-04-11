@@ -167,5 +167,9 @@ uint8_t BSP_GPS_GetLatestRmcSentence(uint8_t *buf, uint16_t buf_size)
     return 1U;
 }
 
-
-
+void BSP_GPS_UART_RxCallback(void)
+{
+    __HAL_UART_CLEAR_FLAG(bsp_gps_state.huart, UART_FLAG_ORE | UART_FLAG_NE | UART_FLAG_FE | UART_FLAG_PE);
+    HAL_UART_AbortReceive(bsp_gps_state.huart);
+    HAL_UART_Receive_IT(bsp_gps_state.huart, &bsp_gps_rx_byte, 1U);
+}

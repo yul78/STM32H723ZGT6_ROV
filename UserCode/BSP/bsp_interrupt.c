@@ -1,5 +1,4 @@
-#include "interrupt.h"
-
+#include "bsp_interrupt.h"
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -9,7 +8,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     cnt++;
     if(cnt >= 10)
     {
-      Scheduler_Set_DroneBalanceControlFlag(); //每100ms置一次平衡控制标志位
+      Scheduler_Set_DroneBalanceControlFlag(); // 每100ms触发一次平衡控制标志位
       cnt = 0;
     }
   }
@@ -43,19 +42,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         }
     }
   }
+
+  if(htim->Instance == TIM1)
+  {
+      Foc_Loop(2);
+      // HAL_GPIO_WritePin(GPIOG, GPIO_PIN_7, GPIO_PIN_RESET);
+  }
+  if(htim->Instance == TIM8)
+  {
+      Foc_Loop(1);
+      // HAL_GPIO_WritePin(GPIOG, GPIO_PIN_7, GPIO_PIN_SET);
+  }
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     if (huart->Instance == jy901_uart.huart->Instance)
     {
-        jy901_uart.data_ready = 1; // 标记数据已准备好
+        jy901_uart.data_ready = 1; // 标志数据已准备好
         jy901_uart.received_byte = Size; // 接收到的字节数
 
         HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);
         
     }
-
 }
 
 /**
@@ -75,7 +84,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         else if(rx_data == 0x04)
             Water_Tank_Draining(&tank_rear, 1.0f);
         //OLED_ShowNum(64, 32, 0, 1, OLED_8X16);
-        HAL_UART_Receive_IT(&huart3, &rx_data, 1); //开启UART中断接收
+        HAL_UART_Receive_IT(&huart3, &rx_data, 1); //开启UART�??�??接收
         #endif
         // 将收到的字节交给手柄解析
         Gamepad_RxCallback(gamepad_rxByte);
@@ -86,7 +95,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
     if (huart->Instance == bsp_gps_state.huart->Instance)
     {
-        /* 中断里仅做单字节入队和重新挂接收，避免拉长中断时间。 */
+        /* 中断里仅做单字节入队和重新挂接收，避免拉长中断时间 */
         bsp_gps_state.received_byte = 1U;
         BSP_GPS_WriteFifo(bsp_gps_rx_byte);
         HAL_UART_Receive_IT(bsp_gps_state.huart, &bsp_gps_rx_byte, 1U);
@@ -94,15 +103,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 /**
- * @brief 串口错误回调，用于清错并恢复接收。
- * @param huart 触发错误的串口句柄。
+ * @brief 串口错误回调，用于清错并重新开启接收
+ * @param huart 触发错误的串口句柄
  */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == bsp_gps_state.huart->Instance)
     {
-        __HAL_UART_CLEAR_FLAG(bsp_gps_state.huart, UART_FLAG_ORE | UART_FLAG_NE | UART_FLAG_FE | UART_FLAG_PE);
-        HAL_UART_AbortReceive(bsp_gps_state.huart);
-        HAL_UART_Receive_IT(bsp_gps_state.huart, &bsp_gps_rx_byte, 1U);
+        BSP_GPS_UART_RxCallback();
     }
 }

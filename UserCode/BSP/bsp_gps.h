@@ -25,5 +25,6 @@ void BSP_GPS_Task(void);
 uint8_t BSP_GPS_HasPendingByte(void);
 uint8_t BSP_GPS_GetLatestRmcSentence(uint8_t *buf, uint16_t buf_size);
 void BSP_GPS_WriteFifo(uint8_t byte);
+void BSP_GPS_UART_RxCallback(void);
 
 #endif

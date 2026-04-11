@@ -26,7 +26,7 @@ void Gamepad_Control(void)
  */
 void FOC_Set_Speed(uint8_t motor_num, int16_t speed)
 {
-  
+  //Foc_Set_Speed(motor_num, (float)speed);
 }
 
 void Drone_Balance_Control(void)

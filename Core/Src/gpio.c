@@ -45,13 +45,16 @@ void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOF, OLED_SDA_Pin|OLED_SCL_Pin, GPIO_PIN_RESET);
@@ -67,6 +70,13 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, MPU_IIC_SCL_Pin|LED_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : USART10_485_Pin */
+  GPIO_InitStruct.Pin = USART10_485_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(USART10_485_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : OLED_SDA_Pin OLED_SCL_Pin */
   GPIO_InitStruct.Pin = OLED_SDA_Pin|OLED_SCL_Pin;

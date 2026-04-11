@@ -1,5 +1,5 @@
-﻿#ifndef __MYIIC_H
-#define __MYIIC_H
+﻿#ifndef __BSP_IIC_SW_H
+#define __BSP_IIC_SW_H
 
 uint8_t MyI2C_ReceiveAck(GPIO_TypeDef * SCL_GPIO_Port, uint16_t SCL_GPIO_Pin, GPIO_TypeDef * SDA_GPIO_Port, uint16_t SDA_GPIO_Pin);
 void MyI2C_SendAck(GPIO_TypeDef * SCL_GPIO_Port, uint16_t SCL_GPIO_Pin, GPIO_TypeDef * SDA_GPIO_Port, uint16_t SDA_GPIO_Pin, uint8_t AckBit);

@@ -59,6 +59,8 @@ void Debug_USART_Show(const char* str);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define USART10_485_Pin GPIO_PIN_4
+#define USART10_485_GPIO_Port GPIOE
 #define OLED_SDA_Pin GPIO_PIN_0
 #define OLED_SDA_GPIO_Port GPIOF
 #define OLED_SCL_Pin GPIO_PIN_1

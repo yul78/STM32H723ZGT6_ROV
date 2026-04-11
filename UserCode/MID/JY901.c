@@ -4,31 +4,18 @@
 #include "usart.h"
 #include "dma.h"
 
-jy901_uart_t jy901_uart;
+
 
 jy901_raw_t jy901_raw;             //使用jy901_raw_t类型定义jy901_raw结构体变量，存放JY901的原始数据
 jy901_raw_t* raw = &jy901_raw;     //定义指向jy901_raw的指针变量
 jy901_data_t jy901_data;           //使用jy901_data_t类型定义jy901_data结构体变量，存放JY901的物理量数据
 jy901_data_t* data = &jy901_data;  //定义指向jy901_data的指针变量
 
-uint8_t JY_RxBuffer[JY_Buffer_Size];
+
 
 static void JY901_Data_Convert(const jy901_raw_t *raw, jy901_data_t *out);
 
-/**
- * @brief JY901模块 绑定 单片机USART和DMA句柄
- */
-void JY901_Init(void)
-{
-    jy901_uart.huart   = &huart_jy901;
-    jy901_uart.hdma_rx = huart_jy901.hdmarx;
 
-    // 清除 USART1 可能的 Overrun/Noise/Framing/Parity 错误标志
-    __HAL_UART_CLEAR_FLAG(jy901_uart.huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF  | UART_CLEAR_PEF);
-    HAL_UART_DMAStop(jy901_uart.huart); // 确保 DMA 处于空闲状态
-    HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);   //开启UART空闲中断+DMA接收
-    __HAL_DMA_DISABLE_IT(jy901_uart.hdma_rx, DMA_IT_HT);                           //关闭DMA的半传输中断
-}
 
 // /**
 //  * @brief 通过 USART4 发送一个完整的数据帧

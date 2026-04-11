@@ -134,7 +134,7 @@ uint8_t Gamepad_IsButtonPressed(uint16_t btn)
  */
 void GamepadData_Analysis(GamepadData_t *raw, Analysis_GamepadData_t *data)
 {
-    // 将0~255映射到-4000~4000
-    data->leftX = ((int16_t)raw->leftX - 128) * 4000 / 127;
-    data->leftY = ((int16_t)raw->leftY - 128) * 4000 / 127;
+    // 将0~255映射到-2000~2000
+    data->leftX = ((int16_t)raw->leftX - 128) * 2000 / 127;
+    data->leftY = ((int16_t)raw->leftY - 128) * 2000 / 127;
 }

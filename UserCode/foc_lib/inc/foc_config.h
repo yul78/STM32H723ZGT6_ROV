@@ -49,7 +49,7 @@ extern "C" {
 #define PI_LIMIT_SPEED          15.0f           // 速度PI输出限幅
 
 // 速度定义（分离开环和闭环）
-#define TARGET_SPEED            2000.0f         // 闭环最终目标(RPM)
+// #define TARGET_SPEED            2000.0f         // 闭环最终目标(RPM)
 #define OPEN_LOOP_SPEED_RPM     600.0f          // 开环启动速度(RPM)，必须是电机能跟上的
 #define SPEED_RAMP_RATE         300.0f          // 闭环加速斜率(RPM/s)
 

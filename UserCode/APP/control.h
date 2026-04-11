@@ -6,7 +6,8 @@
 #include "H_Tmc2209.h"
 #include "WaterTank.h"
 #include "PID.h"
-#include "JY901.h"
+#include "bsp_jy901.h"
+#include "jy901.h"
 
 void Gamepad_Control(void);
 void FOC_Set_Speed(uint8_t motor_num, int16_t speed);

@@ -27,13 +27,13 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "H_Tmc2209.h"
-#include "delay.h"
-#include "OLED.h"
-#include "mpu6050.h"
-#include "JY901.h"
+#include "bsp_delay.h"
+// #include "OLED.h"
+// #include "mpu6050.h"
+#include "bsp_jy901.h"
+#include "control.h"
 #include "WaterADC.h"
 #include "WaterTank.h"
-#include "interrupt.h"
 #include "Gamepad.h"
 #include "app_gps.h"
 #include "app_thrusters.h"
@@ -122,25 +122,45 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM8_Init();
   MX_USART6_UART_Init();
+  MX_USART10_UART_Init();
   /* USER CODE BEGIN 2 */
 
   Gamepad_Init(&gamepad_huart);  // 手柄初始化
-  OLED_Init();
-  MPU6050_Init();
-  JY901_Init();
+  // OLED_Init();
+  // MPU6050_Init();
+  BSP_JY901_Init();
   Water_Tank_Init();
   WaterADC_Init();
   APP_GPS_Init();
   APP_Thrusters_Init();
   HAL_TIM_Base_Start_IT(&htim3);
+
+  // 无刷电机初始化
+  Foc_Init(1, &foc_hal);
+  Foc_Init(2, &foc_hal);
+
+  HAL_Delay(50);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   GamepadData_t *pad;
+
+  HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
   while (1)
   {
-  
+
+    /***********485测试************/
+    // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_SET); // 485发送使能
+    // char *test_str = "Hello, 485!\n";
+    // HAL_UART_Transmit(&huart10, (uint8_t *)test_str, strlen(test_str), 100);
+    // while(__HAL_UART_GET_FLAG(&huart10, UART_FLAG_TC) == RESET);
+    
+    // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
+
+    /***********游戏手柄控制无刷电机************/
+
+    Gamepad_Control();  // 游戏手柄控制无刷电机
     pad = Gamepad_GetData();
     if (pad->isUpdated)
 		{
@@ -190,6 +210,9 @@ int main(void)
     
     /************* OLED显示JY901S物理数据 *************/
     JY901_Task();
+    char jy_info[128];
+    sprintf(jy_info, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
+    //Debug_USART_Show(jy_info);
     // OLED_ShowFloatNum(0, 0, jy901_data.ax,2, 2, OLED_8X16);       // X轴加速度（单位：g）
     // OLED_ShowFloatNum(0, 16, jy901_data.ay,2, 2, OLED_8X16);      // Y轴加速度（单位：g）
     // OLED_ShowFloatNum(0, 32, jy901_data.az, 2, 2, OLED_8X16);     // Z轴加速度（单位：g）
@@ -200,33 +223,20 @@ int main(void)
 
     //OLED_ShowFloatNum(0, 0, jy901_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
     // OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
-    OLED_ShowFloatNum(0, 48, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
+    //OLED_ShowFloatNum(0, 48, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
 
     /************* 获取GPS数据 *************/
     APP_GPS_Task();
     char gps_info[128];
     sprintf(gps_info, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
-    //Debug_USART_Show(gps_info);
-
-    /************* OLED显示MPU6050物理数据 *************/
-    //MPU6050_GetData();
-
-    // OLED_ShowFloatNum(0, 0, mpu6050_data.ax,2, 2, OLED_8X16);       // X轴加速度（单位：g）
-    // OLED_ShowFloatNum(0, 16, mpu6050_data.ay,2, 2, OLED_8X16);      // Y轴加速度（单位：g）
-    // OLED_ShowFloatNum(0, 32, mpu6050_data.az, 2, 2, OLED_8X16);     // Z轴加速度（单位：g）
-
-    // OLED_ShowFloatNum(0, 0, jy901_data.gx, 2, 2, OLED_8X16);      // X轴角速度（单位：度每秒）
-    // OLED_ShowFloatNum(0, 16, jy901_data.gy, 2, 2, OLED_8X16);     // Y轴角速度（单位：度每秒）
-    // OLED_ShowFloatNum(0, 32, jy901_data.gz, 2, 2, OLED_8X16);     // Z轴角速度（单位：度每秒）
-    
-    // OLED_ShowFloatNum(0, 0, mpu6050_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
-    // OLED_ShowFloatNum(0, 16, mpu6050_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
-    // OLED_ShowFloatNum(0, 32, mpu6050_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
+    Debug_USART_Show(gps_info);
 
     /**************** OLED显示ADC采样值 ****************/
     // OLED_ShowNum(64, 0, adc_value[0], 5, OLED_8X16);
     // OLED_ShowNum(64, 16, adc_value[1], 5, OLED_8X16);
-
+    char  water_adc_info[128];
+    sprintf(water_adc_info, "Voltage: %.2fV, %.2fV\n", voltage_value[0], voltage_value[1]);
+    //Debug_USART_Show(water_adc_info);
     if(Water_Check()) 
     {
       Debug_USART_Show("Water detected! Start draining...\r\n"); //调试信息
@@ -252,23 +262,25 @@ int main(void)
     //OLED_ShowNum(64, 32, Motor_GetStep(1), 5, OLED_8X16);
     
     /*********************水舱**********************/
-    OLED_ShowNum(0,16, tank_front.state, 1, OLED_8X16);
-    OLED_ShowFloatNum(0, 32, tank_front.now_water_volume, 2, 2, OLED_8X16);
+    //OLED_ShowNum(0,16, tank_front.state, 1, OLED_8X16);
+    //OLED_ShowFloatNum(0, 32, tank_front.now_water_volume, 2, 2, OLED_8X16);
     
     //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
     //Water_Tank_Front_Get_Volume();
-    OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
-    OLED_ShowFloatNum(64, 32, tank_rear.now_water_volume, 2, 2, OLED_8X16);
+    //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
+    //OLED_ShowFloatNum(64, 32, tank_rear.now_water_volume, 2, 2, OLED_8X16);
     //OLED_ShowFloatNum(64, 32, tank_front.target_water_volume, 2, 2, OLED_8X16);
     
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    OLED_Update();
+    //OLED_Update();
 
     //水舱状态机更新
     Water_Tank_Update_Handler(&tank_front); 
     Water_Tank_Update_Handler(&tank_rear);
+
+    HAL_Delay(20);
     
   }
   /* USER CODE END 3 */

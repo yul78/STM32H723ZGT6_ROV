@@ -6,8 +6,7 @@
 #include <string.h>
 #include "gpio.h"
 #include "main.h"
-#include "OLED.h"
-#include "delay.h"
+#include "bsp_delay.h"
 
 /*水舱的状态枚举变量*/
 typedef enum 
@@ -58,7 +57,7 @@ void Water_Tank_Init(void);
 void Water_Tank_Filling(water_tank_t *tank, float delta_xML);
 void Water_Tank_Draining(water_tank_t *tank, float delta_xML);
 void Water_Tank_Fill_To(water_tank_t *tank, float target_xML);
-void Water_Tank_Drain_TO(water_tank_t *tank, float target_xML);
+void Water_Tank_Drain_To(water_tank_t *tank, float target_xML);
 void Water_Tank_Draining_To_Empty(water_tank_t *tank);
 void Load_Water_Volume(water_tank_t *tank);
 void Water_Tank_Update_Handler(water_tank_t *tank);

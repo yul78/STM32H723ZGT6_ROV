@@ -2,8 +2,8 @@
  * @file foc.c
  * @author MING
  * @brief foc调用库
- * @version 0.2
- * @date 2026-03-22
+ * @version 0.3
+ * @date 2026-04-07
  * 
  * @copyright Copyright (c) 2026
  * 
@@ -69,7 +69,7 @@ foc_state_t Foc_ParamInit(foc_handle_t *motor, const foc_hal_t *hal_interface)
         .kp = PI_KP_SPEED,
         .ki = PI_KI_SPEED,
         .limit = PI_LIMIT_SPEED,
-        .target = TARGET_SPEED,
+        .target = 0,
         .integral = 0.0f};
 
     // 初始占空比
@@ -95,7 +95,7 @@ foc_state_t Foc_ParamInit(foc_handle_t *motor, const foc_hal_t *hal_interface)
 
     motor->pi_pll.integral = 0.0f;
     motor->speed_observer = 0.0f;
-    // motor->target_speed = 0.0f;
+    motor->target_speed = 0.0f;
     motor->theta = 0.0f; // 确保起始角度从0开始
     motor->speed_ramp_target = 0.0f;
     motor->state_timer = 0;
@@ -165,10 +165,10 @@ foc_state_t Foc_Loop(uint8_t motor_num)
             motor->pi_q.output = PWM_VBUS * 0.25f;
 
             motor->speed_ramp_target = motor->speed + 100;
-            if (motor->speed_ramp_target > TARGET_SPEED)
-                motor->speed_ramp_target = TARGET_SPEED;
-            if(motor->speed_ramp_target < -TARGET_SPEED)
-                motor->speed_ramp_target = -TARGET_SPEED;
+            // if (motor->speed_ramp_target > motor->target_speed)
+            //     motor->speed_ramp_target = motor->target_speed;
+            // if(motor->speed_ramp_target < -motor->target_speed)
+            //     motor->speed_ramp_target = -motor->target_speed;
 
             motor->theta_Observer = motor->theta;
             motor->pi_pll.integral = OPEN_ELEC_SPEED;
@@ -332,13 +332,13 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     {
         motor->PI_Speed_cnt = 0;
 
-        if(TARGET_SPEED > 0)
+        if(motor->target_speed > motor->speed_ramp_target)
         {
             motor->speed_ramp_target += SPEED_RAMP_RATE * dt * 10.0f;
             if (motor->speed_ramp_target > motor->pi_speed.target)
                 motor->speed_ramp_target = motor->pi_speed.target;
         }
-        else
+        else if(motor->target_speed < motor->speed_ramp_target)
         {
             motor->speed_ramp_target -= SPEED_RAMP_RATE * dt * 10.0f;
             if (motor->speed_ramp_target < motor->pi_speed.target)
@@ -428,6 +428,7 @@ foc_state_t Foc_Stop(uint8_t motor_num)
 foc_state_t Foc_Set_Speed(uint8_t motor_num, float speed)
 {
     foc_handle_t *motor = &FOC_Motor[motor_num];
+    motor->target_speed = speed;
     motor->pi_speed.target = speed;
     return FOC_OK;
 }

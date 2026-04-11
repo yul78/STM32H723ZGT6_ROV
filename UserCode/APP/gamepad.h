@@ -5,34 +5,34 @@
 
 #define gamepad_huart   huart6
 
-// åè®®å®šä¹‰
+// Ğ­Òé¶¨Òå
 #define FRAME_HEAD1     0xAA
 #define FRAME_HEAD2     0x55
 #define FRAME_TAIL      0x0D
-#define FRAME_LENGTH    14      // æ•´åŒ…é•¿åº¦
+#define FRAME_LENGTH    14      // Õû°ü³¤¶È
 
-// æ‰‹æŸ„æ•°æ®ç»“æ„ä½“
+// ÊÖ±úÊı¾İ½á¹¹Ìå
 typedef struct {
-    uint8_t  leftX;         // å·¦æ‘‡æ†X  (0~255, 128å±…ä¸­)
-    uint8_t  leftY;         // å·¦æ‘‡æ†Y  (0~255, 128å±…ä¸­)
-    uint8_t  rightX;        // å³æ‘‡æ†X  (0~255, 128å±…ä¸­)
-    uint8_t  rightY;        // å³æ‘‡æ†Y  (0~255, 128å±…ä¸­)
-    uint16_t buttons;       // æŒ‰é”® (1=A, 2=B, 4=X, 8=Y, 16=å¼€å…³å·¦è¾¹æŒ‰é”®, 64=å¼€å…³å³è¾¹æŒ‰é”®, 128=å·¦æ‘‡æ†æŒ‰ä¸‹, 256=å³æ‘‡æ†æŒ‰ä¸‹, 512=LB(æŒ‰é”®æœ‰ç‚¹é—®é¢˜), 1024=RB)
-    uint8_t  hatX;          // åå­—é”®X  (0=å·¦, 1=ä¸­, 2=å³)
-    uint8_t  hatY;          // åå­—é”®Y  (0=ä¸Š, 1=ä¸­, 2=ä¸‹)
-    uint8_t  lt;            // å·¦æ‰³æœº
-    uint8_t  rt;            // å³æ‰³æœº
-    uint8_t  isUpdated;     // æ•°æ®æ›´æ–°æ ‡å¿—
+    uint8_t  leftX;         // ×óÒ¡¸ËX  (0~255, 128¾ÓÖĞ)
+    uint8_t  leftY;         // ×óÒ¡¸ËY  (0~255, 128¾ÓÖĞ)
+    uint8_t  rightX;        // ÓÒÒ¡¸ËX  (0~255, 128¾ÓÖĞ)
+    uint8_t  rightY;        // ÓÒÒ¡¸ËY  (0~255, 128¾ÓÖĞ)
+    uint16_t buttons;       // °´¼ü (1=A, 2=B, 4=X, 8=Y, 16=¿ª¹Ø×ó±ß°´¼ü, 64=¿ª¹ØÓÒ±ß°´¼ü, 128=×óÒ¡¸Ë°´ÏÂ, 256=ÓÒÒ¡¸Ë°´ÏÂ, 512=LB(°´¼üÓĞµãÎÊÌâ), 1024=RB)
+    uint8_t  hatX;          // Ê®×Ö¼üX  (0=×ó, 1=ÖĞ, 2=ÓÒ)
+    uint8_t  hatY;          // Ê®×Ö¼üY  (0=ÉÏ, 1=ÖĞ, 2=ÏÂ)
+    uint8_t  lt;            // ×ó°â»ú
+    uint8_t  rt;            // ÓÒ°â»ú
+    uint8_t  isUpdated;     // Êı¾İ¸üĞÂ±êÖ¾
 }  GamepadData_t;
 
 typedef struct {
-    int16_t leftX;  // å·¦æ‘‡æ†X  (-4000~4000)
-    int16_t leftY;  // å·¦æ‘‡æ†Y  (-4000~4000)
+    int16_t leftX;  // ×óÒ¡¸ËX  (-4000~4000)
+    int16_t leftY;  // ×óÒ¡¸ËY  (-4000~4000)
 } Analysis_GamepadData_t;
 
 extern uint8_t gamepad_rxByte;
 
-// å‡½æ•°å£°æ˜
+// º¯ÊıÉùÃ÷
 void Gamepad_Init(UART_HandleTypeDef *huart);
 void Gamepad_RxCallback(uint8_t data);
 GamepadData_t* Gamepad_GetData(void);
