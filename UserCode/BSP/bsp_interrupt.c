@@ -1,9 +1,21 @@
 #include "bsp_interrupt.h"
+#include "FreeRTOS.h"
+#include "cmsis_os2.h"
+#include "semphr.h"
+
+extern osSemaphoreId_t FocBinarySemHandle;
+
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim == &htim3) //10ms定时器中断
   {
+    
+    // 每10ms触发一次FOC控制任务
+    BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
+    xSemaphoreGiveFromISR(FocBinarySemHandle, &pxHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);  // 中断结束后立刻触发任务调度
+
     static uint16_t cnt = 0;
     cnt++;
     if(cnt >= 10)
