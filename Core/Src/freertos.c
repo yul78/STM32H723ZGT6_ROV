@@ -35,6 +35,7 @@
 #include "app_thrusters.h"
 #include "semphr.h"
 #include "foc.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,24 +57,55 @@
 /* USER CODE BEGIN Variables */
 GamepadData_t *pad;
 /* USER CODE END Variables */
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
+/* Definitions for SystemTask */
+osThreadId_t SystemTaskHandle;
+const osThreadAttr_t SystemTask_attributes = {
+  .name = "SystemTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for FocTask */
 osThreadId_t FocTaskHandle;
 const osThreadAttr_t FocTask_attributes = {
   .name = "FocTask",
   .stack_size = 1024 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityHigh,
 };
-/* Definitions for FocBinarySem */
-osSemaphoreId_t FocBinarySemHandle;
-const osSemaphoreAttr_t FocBinarySem_attributes = {
-  .name = "FocBinarySem"
+/* Definitions for NavigationTask */
+osThreadId_t NavigationTaskHandle;
+const osThreadAttr_t NavigationTask_attributes = {
+  .name = "NavigationTask",
+  .stack_size = 1024 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for BuoyancyTask */
+osThreadId_t BuoyancyTaskHandle;
+const osThreadAttr_t BuoyancyTask_attributes = {
+  .name = "BuoyancyTask",
+  .stack_size = 768 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
+/* Definitions for CommTask */
+osThreadId_t CommTaskHandle;
+const osThreadAttr_t CommTask_attributes = {
+  .name = "CommTask",
+  .stack_size = 1024 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
+/* Definitions for GamepadQueue */
+osMessageQueueId_t GamepadQueueHandle;
+const osMessageQueueAttr_t GamepadQueue_attributes = {
+  .name = "GamepadQueue"
+};
+/* Definitions for WaterTankQueue */
+osMessageQueueId_t WaterTankQueueHandle;
+const osMessageQueueAttr_t WaterTankQueue_attributes = {
+  .name = "WaterTankQueue"
+};
+/* Definitions for DebugUsartMutex */
+osMutexId_t DebugUsartMutexHandle;
+const osMutexAttr_t DebugUsartMutex_attributes = {
+  .name = "DebugUsartMutex"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,8 +113,11 @@ const osSemaphoreAttr_t FocBinarySem_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
+void vSystemTask(void *argument);
 void vFocTask(void *argument);
+void vNavigationTask(void *argument);
+void vBuoyancyTask(void *argument);
+void vCommTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -95,14 +130,13 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
+  /* Create the mutex(es) */
+  /* creation of DebugUsartMutex */
+  DebugUsartMutexHandle = osMutexNew(&DebugUsartMutex_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
-
-  /* Create the semaphores(s) */
-  /* creation of FocBinarySem */
-  FocBinarySemHandle = osSemaphoreNew(1, 1, &FocBinarySem_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
@@ -112,16 +146,32 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* creation of GamepadQueue */
+  GamepadQueueHandle = osMessageQueueNew (1, sizeof(uint8_t), &GamepadQueue_attributes);
+
+  /* creation of WaterTankQueue */
+  WaterTankQueueHandle = osMessageQueueNew (10, sizeof(uint16_t), &WaterTankQueue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* creation of SystemTask */
+  SystemTaskHandle = osThreadNew(vSystemTask, NULL, &SystemTask_attributes);
 
   /* creation of FocTask */
   FocTaskHandle = osThreadNew(vFocTask, NULL, &FocTask_attributes);
+
+  /* creation of NavigationTask */
+  NavigationTaskHandle = osThreadNew(vNavigationTask, NULL, &NavigationTask_attributes);
+
+  /* creation of BuoyancyTask */
+  BuoyancyTaskHandle = osThreadNew(vBuoyancyTask, NULL, &BuoyancyTask_attributes);
+
+  /* creation of CommTask */
+  CommTaskHandle = osThreadNew(vCommTask, NULL, &CommTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -133,167 +183,55 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_vSystemTask */
 /**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+* @brief Function implementing the SystemTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_vSystemTask */
+void vSystemTask(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
-  Gamepad_Init(&gamepad_huart);  // 手柄初始化
-  // OLED_Init();
-  // MPU6050_Init();
-  BSP_JY901_Init();
-  Water_Tank_Init(); // 初始化排水，会卡死
-  WaterADC_Init();
-  APP_GPS_Init();
-  APP_Thrusters_Init();
-  HAL_TIM_Base_Start_IT(&htim3);
-
-  // 无刷电机初始化
-  Foc_Init(1, &foc_hal);
-  Foc_Init(2, &foc_hal);
-  
-  vTaskDelay(50);
-
-  HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
-
+  /* USER CODE BEGIN vSystemTask */
   /* Infinite loop */
+  // 优先级：SystemTask < CommTask < NavigationTask < BuoyancyTask < FocTask
+  // 任务调度：FocTask（10ms周期）> BuoyancyTask（50ms周期）> NavigationTask（100ms周期）> CommTask（500ms周期）> SystemTask（20周期）
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   for(;;)
   {
-    /***********485测试************/
-    // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_SET); // 485发送使能
-    // char *test_str = "Hello, 485!\n";
-    // HAL_UART_Transmit(&huart10, (uint8_t *)test_str, strlen(test_str), 100);
-    // while(__HAL_UART_GET_FLAG(&huart10, UART_FLAG_TC) == RESET);
-    
-    // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
-
     /***********游戏手柄控制无刷电机************/
-
-    Gamepad_Control();  // 游戏手柄控制无刷电机
     pad = Gamepad_GetData();
     if (pad->isUpdated)
 		{
 			pad->isUpdated = 0;  // 清除标志
-			// ========= 使用手柄数据 =========
-      //Debug_USART_Show("Pad Upadate");
-      //A键：前舱吸水1ml B键：前舱排水1ml X键：后舱吸水1ml Y键：后舱排水1ml
-      if(pad->buttons == 1)
-      {
-        Water_Tank_Filling(&tank_front, 1.0f);
-      }
-      if(pad->buttons == 2)
-      {
-        Water_Tank_Draining(&tank_front, 1.0f);
-      }
-      if(pad->buttons == 4)
-      {
-        Water_Tank_Filling(&tank_rear, 1.0f);
-      }
-      if(pad->buttons == 8)
-      {
-        Water_Tank_Draining(&tank_rear, 1.0f);
-      }
+
+      // 将按键状态发送到BuoyancyTask中
+      xQueueSend(WaterTankQueueHandle, &pad->buttons, 0);
     }
 
-    /************* OLED显示手柄数据 *************/
-    // OLED_ShowString(0, 0, "LX:", OLED_8X16);
-    // OLED_ShowString(0, 16, "LY:", OLED_8X16);
-    // OLED_ShowString(56, 0, "RX:", OLED_8X16);
-    // OLED_ShowString(56, 16, "RY:", OLED_8X16);
-    // OLED_ShowString(0, 32, "btn:", OLED_8X16);
-    // OLED_ShowString(0, 48, "hatX:", OLED_8X16);
-    // OLED_ShowString(56, 48, "hatY:", OLED_8X16);
-    // OLED_ShowNum(24, 0, pad->leftX, 3, OLED_8X16);
-    // OLED_ShowNum(24, 16, pad->leftY, 3, OLED_8X16);
-
-    // OLED_ShowNum(80, 0, pad->rightX, 3, OLED_8X16);
-    // OLED_ShowNum(80, 16, pad->rightY, 3, OLED_8X16);
-
-    // OLED_ShowNum(32, 32, pad->buttons, 4, OLED_8X16);
-    // OLED_ShowNum(40, 48, pad->hatX, 1, OLED_8X16);
-    // OLED_ShowNum(96, 48, pad->hatY, 1, OLED_8X16);
-
-    // OLED_ShowNum(72, 32, pad->lt, 2, OLED_8X16);
-    // OLED_ShowNum(96, 32, pad->rt, 2, OLED_8X16);
-    //OLED_ShowString(0,0,"hello,723!",OLED_8X16);
-    
-    /************* OLED显示JY901S物理数据 *************/
-    JY901_Task();
-    char jy_info[128];
-    sprintf(jy_info, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
-    // Debug_USART_Show(jy_info);
-    // OLED_ShowFloatNum(0, 0, jy901_data.ax,2, 2, OLED_8X16);       // X轴加速度（单位：g）
-    // OLED_ShowFloatNum(0, 16, jy901_data.ay,2, 2, OLED_8X16);      // Y轴加速度（单位：g）
-    // OLED_ShowFloatNum(0, 32, jy901_data.az, 2, 2, OLED_8X16);     // Z轴加速度（单位：g）
-
-    // OLED_ShowFloatNum(0, 0, jy901_data.gx, 2, 2, OLED_8X16);      // X轴角速度（单位：度每秒）
-    // OLED_ShowFloatNum(0, 16, jy901_data.gy, 2, 2, OLED_8X16);     // Y轴角速度（单位：度每秒）
-    // OLED_ShowFloatNum(0, 32, jy901_data.gz, 2, 2, OLED_8X16);     // Z轴角速度（单位：度每秒）
-
-    // OLED_ShowFloatNum(0, 0, jy901_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
-    // OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
-    // OLED_ShowFloatNum(0, 48, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
+    /**************** ADC采样值 ****************/
+    // char  water_adc_info[128];
+    // sprintf(water_adc_info, "Voltage: %.2fV, %.2fV\n", voltage_value[0], voltage_value[1]);
+    // Debug_USART_Show(water_adc_info);
+    if(Water_Check()) 
+    {
+      //Debug_USART_Show("Water detected! Start draining...\r\n"); //调试信息
+      Water_Tank_Draining_To_Empty(&tank_front);
+      //Debug_USART_Show("Draing finished...\r\n"); //调试信息
+      while(1);
+    };
 
     /************* 获取GPS数据 *************/
     APP_GPS_Task();
-    char gps_info[128];
-    sprintf(gps_info, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
-    Debug_USART_Show(gps_info);
-
-    /**************** OLED显示ADC采样值 ****************/
-    // OLED_ShowNum(64, 0, adc_value[0], 5, OLED_8X16);
-    // OLED_ShowNum(64, 16, adc_value[1], 5, OLED_8X16);
-    char  water_adc_info[128];
-    sprintf(water_adc_info, "Voltage: %.2fV, %.2fV\n", voltage_value[0], voltage_value[1]);
-    //Debug_USART_Show(water_adc_info);
-    if(Water_Check()) 
-    {
-      Debug_USART_Show("Water detected! Start draining...\r\n"); //调试信息
-      Water_Tank_Draining_To_Empty(&tank_front);
-      //Water_Tank_Draning_To_Empty(&tank_rear);
-      Debug_USART_Show("Draing finished...\r\n"); //调试信息
-      while(1);
-    };
-    // OLED_ShowFloatNum(0, 48, voltage_value[0], 1, 1, OLED_8X16);    
-    // OLED_ShowFloatNum(64, 48,voltage_value[1], 1, 1, OLED_8X16);      
-
-    /*********************步进电机**********************/
-    // if(jy901_data.roll > 10)
-    // {
-    //     Motor_Set(1, 2, 1, 800,400,2400,800);
-    //     Motor_Set(2, 2, 1, 800,400,2400,800);
-    // }
-    // else if(jy901_data.roll < -10)
-    // {
-    //     Motor_Set(1, 2, 0, 800,400,2400,800);
-    //     Motor_Set(2, 2, 0, 800,400,2400,800);
-    // }
-    //OLED_ShowNum(64, 32, Motor_GetStep(1), 5, OLED_8X16);
-    
-    /*********************水舱**********************/
-    //OLED_ShowNum(0,16, tank_front.state, 1, OLED_8X16);
-    //OLED_ShowFloatNum(0, 32, tank_front.now_water_volume, 2, 2, OLED_8X16);
-    
-    //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
-    //Water_Tank_Front_Get_Volume();
-    //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
-    //OLED_ShowFloatNum(64, 32, tank_rear.now_water_volume, 2, 2, OLED_8X16);
-    //OLED_ShowFloatNum(64, 32, tank_front.target_water_volume, 2, 2, OLED_8X16);
-    
-    //OLED_Update();
 
     //水舱状态机更新
     Water_Tank_Update_Handler(&tank_front); 
     Water_Tank_Update_Handler(&tank_rear);
 
-    osDelay(20);
+    // 每20ms检查一次
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(20));
   }
-  /* USER CODE END StartDefaultTask */
+  /* USER CODE END vSystemTask */
 }
 
 /* USER CODE BEGIN Header_vFocTask */
@@ -307,15 +245,116 @@ void vFocTask(void *argument)
 {
   /* USER CODE BEGIN vFocTask */
   /* Infinite loop */
+  HAL_TIM_Base_Start_IT(&htim3);
   for(;;)
   {
-    if (xSemaphoreTake(FocBinarySemHandle, portMAX_DELAY))
-    {
-      Debug_USART_Show("FocTask...\r\n"); //调试信息
-      Gamepad_Control();  // 游戏手柄控制无刷电机
-    }
+    // TIM3中断中每10ms释放一次
+    // 等待中断通知
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+    Gamepad_Control();  // 游戏手柄控制无刷电机
   }
   /* USER CODE END vFocTask */
+}
+
+/* USER CODE BEGIN Header_vNavigationTask */
+/**
+* @brief Function implementing the NavigationTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_vNavigationTask */
+void vNavigationTask(void *argument)
+{
+  /* USER CODE BEGIN vNavigationTask */
+  /* Infinite loop */
+  TickType_t xLastWakeTime = xTaskGetTickCount(); // 获取当前系统时间作为基准时间
+  for(;;)
+  {
+    /************* JY901S物理数据 *************/
+    JY901_Task();
+
+    // 每100ms执行一次
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
+  }
+  /* USER CODE END vNavigationTask */
+}
+
+/* USER CODE BEGIN Header_vBuoyancyTask */
+/**
+* @brief Function implementing the BuoyancyTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_vBuoyancyTask */
+void vBuoyancyTask(void *argument)
+{
+  /* USER CODE BEGIN vBuoyancyTask */
+  /* Infinite loop */
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  for(;;)
+  {
+    uint8_t buttons = 0;
+    //A键：前舱吸水1ml B键：前舱排水1ml X键：后舱吸水1ml Y键：后舱排水1ml
+    xQueueReceive(WaterTankQueueHandle, &buttons, portMAX_DELAY);
+    if(buttons == 1)
+    {
+      Water_Tank_Filling(&tank_front, 1.0f);
+    }
+    if(buttons == 2)
+    {
+      Water_Tank_Draining(&tank_front, 1.0f);
+    }
+    if(buttons == 4)
+    {
+      Water_Tank_Filling(&tank_rear, 1.0f);
+    }
+    if(buttons == 8)
+    {
+      Water_Tank_Draining(&tank_rear, 1.0f);
+    }
+
+    // 每50ms检查一次
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(50));
+  }
+  /* USER CODE END vBuoyancyTask */
+}
+
+/* USER CODE BEGIN Header_vCommTask */
+/**
+* @brief Function implementing the CommTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_vCommTask */
+void vCommTask(void *argument)
+{
+  /* USER CODE BEGIN vCommTask */
+  /* Infinite loop */
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  char Buffer[128];  // 调试信息缓冲区
+  for(;;)
+  {
+    // gps数据通过串口中断接收并存储在gps_data结构体中，定期打印到调试串口
+    sprintf(Buffer, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
+    Debug_USART_Show(Buffer);
+
+    // 显示剩余堆内存，返回值单位是字节
+    sprintf(Buffer, "Free Heap: %u\r\n", xPortGetFreeHeapSize());
+    Debug_USART_Show(Buffer);
+
+    // 显示栈剩余空间，返回值代为是字
+    sprintf(Buffer, "FOC stack left: %u\r\n", uxTaskGetStackHighWaterMark(FocTaskHandle));
+    Debug_USART_Show(Buffer);
+
+    // JY901S数据
+    sprintf(Buffer, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
+    Debug_USART_Show(Buffer);
+
+    // 每500ms打印一次
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
+  }
+  /* USER CODE END vCommTask */
 }
 
 /* Private application code --------------------------------------------------*/

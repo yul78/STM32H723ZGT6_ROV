@@ -3,7 +3,7 @@
 #include "cmsis_os2.h"
 #include "semphr.h"
 
-extern osSemaphoreId_t FocBinarySemHandle;
+extern osThreadId_t FocTaskHandle;
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -12,9 +12,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   {
     
     // 每10ms触发一次FOC控制任务
-    BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(FocBinarySemHandle, &pxHigherPriorityTaskWoken);
-    portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);  // 中断结束后立刻触发任务调度
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(FocTaskHandle, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);   // 中断结束后立刻触发任务调度
 
     static uint16_t cnt = 0;
     cnt++;

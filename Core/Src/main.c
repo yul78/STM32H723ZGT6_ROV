@@ -39,6 +39,7 @@
 #include "gamepad.h"
 #include "app_gps.h"
 #include "app_thrusters.h"
+#include "semphr.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,7 +60,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+extern osMutexId_t DebugUsartMutexHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -127,7 +128,22 @@ int main(void)
   MX_USART6_UART_Init();
   MX_USART10_UART_Init();
   /* USER CODE BEGIN 2 */
+  Gamepad_Init(&gamepad_huart);  // 手柄初始化
+  // OLED_Init();
+  // MPU6050_Init();
+  BSP_JY901_Init();
+  // Water_Tank_Init(); // 初始化排水，会卡死
+  WaterADC_Init();
+  APP_GPS_Init();
+  APP_Thrusters_Init();
+
+  // 无刷电机初始化
+  Foc_Init(1, &foc_hal);
+  Foc_Init(2, &foc_hal);
   
+  // HAL_Delay(50);
+
+  HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -238,7 +254,10 @@ void PeriphCommonClock_Config(void)
 /* USER CODE BEGIN 4 */
 void Debug_USART_Show(const char* str)
 {
-    HAL_UART_Transmit(&DEBUG_huart, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+  // 通过互斥锁保护串口资源，防止多任务同时访问导致数据混乱
+  xSemaphoreTake(DebugUsartMutexHandle, portMAX_DELAY);
+  HAL_UART_Transmit(&DEBUG_huart, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+  xSemaphoreGive(DebugUsartMutexHandle);
 }
 /* USER CODE END 4 */
 
