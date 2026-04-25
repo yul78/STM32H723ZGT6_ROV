@@ -132,7 +132,7 @@ int main(void)
   // OLED_Init();
   // MPU6050_Init();
   BSP_JY901_Init();
-  // Water_Tank_Init(); // 初始化排水，会卡死
+  Water_Tank_Init(); // 初始化排水，会卡死
   WaterADC_Init();
   APP_GPS_Init();
   APP_Thrusters_Init();
@@ -141,7 +141,7 @@ int main(void)
   Foc_Init(1, &foc_hal);
   Foc_Init(2, &foc_hal);
   
-  // HAL_Delay(50);
+  HAL_Delay(50);
 
   HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
   /* USER CODE END 2 */

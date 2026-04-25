@@ -10,9 +10,9 @@ extern "C" {
 // PWM参数
 #define PWM_ARR                 8088.0f         // 自动重载值
 #define PWM_SCALE               3.3f            // ADC参考电压
-#define PWM_VBUS                12.5f           // VBUS母线电压
+#define PWM_VBUS                13.5f           // VBUS母线电压
 #define ADC_RESOLUTION          65535.0f        // 16位ADC分辨率
-#define TS                      0.00005882f     // 采样时间间隔
+#define TS                      0.0001176f     // 采样时间间隔
 
 // INA240参数   
 #define INA240_GAIN             50.0f           // INA240A2增益50V/V
@@ -44,14 +44,15 @@ extern "C" {
 #define PI_KI_D                 2374.069f   
 #define PI_KP_Q                 0.8591f 
 #define PI_KI_Q                 2374.069f
-#define PI_KP_SPEED             0.0028f         // 速度PI比例系数
-#define PI_KI_SPEED             0.01f          // 速度PI积分系数
+#define PI_KP_SPEED             0.0015f         // 速度PI比例系数
+#define PI_KI_SPEED             0.002f          // 速度PI积分系数
 #define PI_LIMIT_SPEED          15.0f           // 速度PI输出限幅
 
 // 速度定义（分离开环和闭环）
 // #define TARGET_SPEED            2000.0f         // 闭环最终目标(RPM)
-#define OPEN_LOOP_SPEED_RPM     600.0f          // 开环启动速度(RPM)，必须是电机能跟上的
-#define SPEED_RAMP_RATE         300.0f          // 闭环加速斜率(RPM/s)
+#define OPEN_LOOP_SPEED_RPM     300.0f          // 开环启动速度(RPM)，必须是电机能跟上的
+#define SPEED_RAMP_RATE         400.0f          // 闭环加速斜率(RPM/s)
+#define SPEED_START_THRESHOLD   50.0f   // RPM，低于此值视为停机指令
 
 #ifdef __cplusplus
 }

@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define gamepad_huart   huart6
+#define gamepad_huart   huart10
 
 // 协议定义
 #define FRAME_HEAD1     0xAA
@@ -19,8 +19,8 @@ typedef struct {
     uint8_t  rightY;        // 右摇杆Y  (0~255, 128居中)
     uint16_t buttons;       // 按键 (1=A, 2=B, 4=X, 8=Y, 16=开关左边按键, 64=开关右边按键, 128=左摇杆按下, 256=右摇杆按下, 512=LB(按键有点问题), 1024=RB)
     uint8_t  hatX;          // 十字键X  (0=左, 1=中, 2=右)
-    uint8_t  hatY;          // 十字键Y  (0=上, 1=中, 2=下)
     uint8_t  lt;            // 左扳机
+    uint8_t  hatY;          // 十字键Y  (0=上, 1=中, 2=下)
     uint8_t  rt;            // 右扳机
     uint8_t  isUpdated;     // 数据更新标志
 }  GamepadData_t;
@@ -28,6 +28,8 @@ typedef struct {
 typedef struct {
     int16_t leftX;  // 左摇杆X  (-4000~4000)
     int16_t leftY;  // 左摇杆Y  (-4000~4000)
+    int16_t rightX; // 右摇杆X  (-4000~4000)
+    int16_t rightY; // 右摇杆Y  (-4000~4000)
 } Analysis_GamepadData_t;
 
 extern uint8_t gamepad_rxByte;

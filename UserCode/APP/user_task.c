@@ -126,5 +126,8 @@ void Communication_Task(void)
     // JY901S数据
     sprintf(Buffer, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
     Debug_USART_Show(Buffer);
+
+    sprintf(Buffer, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
+    Debug_USART_Show(Buffer);
 }
 
