@@ -26,16 +26,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "bsp_jy901.h"
-#include "control.h"
-#include "WaterADC.h"
-#include "WaterTank.h"
-#include "Gamepad.h"
-#include "app_gps.h"
-#include "app_thrusters.h"
-#include "semphr.h"
-#include "foc.h"
-#include "stdio.h"
+#include "user_task.h"
+#include "tim.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,7 +47,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-GamepadData_t *pad;
+
 /* USER CODE END Variables */
 /* Definitions for SystemTask */
 osThreadId_t SystemTaskHandle;
@@ -199,34 +191,8 @@ void vSystemTask(void *argument)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for(;;)
   {
-    /***********游戏手柄控制无刷电机************/
-    pad = Gamepad_GetData();
-    if (pad->isUpdated)
-		{
-			pad->isUpdated = 0;  // 清除标志
-
-      // 将按键状态发送到BuoyancyTask中
-      xQueueSend(WaterTankQueueHandle, &pad->buttons, 0);
-    }
-
-    /**************** ADC采样值 ****************/
-    // char  water_adc_info[128];
-    // sprintf(water_adc_info, "Voltage: %.2fV, %.2fV\n", voltage_value[0], voltage_value[1]);
-    // Debug_USART_Show(water_adc_info);
-    if(Water_Check()) 
-    {
-      //Debug_USART_Show("Water detected! Start draining...\r\n"); //调试信息
-      Water_Tank_Draining_To_Empty(&tank_front);
-      //Debug_USART_Show("Draing finished...\r\n"); //调试信息
-      while(1);
-    };
-
-    /************* 获取GPS数据 *************/
-    APP_GPS_Task();
-
-    //水舱状态机更新
-    Water_Tank_Update_Handler(&tank_front); 
-    Water_Tank_Update_Handler(&tank_rear);
+    // 任务运行
+    System_Task();
 
     // 每20ms检查一次
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(20));
@@ -252,7 +218,8 @@ void vFocTask(void *argument)
     // 等待中断通知
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-    Gamepad_Control();  // 游戏手柄控制无刷电机
+    // Foc任务运行
+    Foc_Task();
   }
   /* USER CODE END vFocTask */
 }
@@ -271,8 +238,8 @@ void vNavigationTask(void *argument)
   TickType_t xLastWakeTime = xTaskGetTickCount(); // 获取当前系统时间作为基准时间
   for(;;)
   {
-    /************* JY901S物理数据 *************/
-    JY901_Task();
+    // 导航任务运行
+    Navigation_Task();
 
     // 每100ms执行一次
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
@@ -294,25 +261,8 @@ void vBuoyancyTask(void *argument)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for(;;)
   {
-    uint8_t buttons = 0;
-    //A键：前舱吸水1ml B键：前舱排水1ml X键：后舱吸水1ml Y键：后舱排水1ml
-    xQueueReceive(WaterTankQueueHandle, &buttons, portMAX_DELAY);
-    if(buttons == 1)
-    {
-      Water_Tank_Filling(&tank_front, 1.0f);
-    }
-    if(buttons == 2)
-    {
-      Water_Tank_Draining(&tank_front, 1.0f);
-    }
-    if(buttons == 4)
-    {
-      Water_Tank_Filling(&tank_rear, 1.0f);
-    }
-    if(buttons == 8)
-    {
-      Water_Tank_Draining(&tank_rear, 1.0f);
-    }
+    // 水舱任务运行
+    Buoyancy_Task();
 
     // 每50ms检查一次
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(50));
@@ -332,24 +282,11 @@ void vCommTask(void *argument)
   /* USER CODE BEGIN vCommTask */
   /* Infinite loop */
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  char Buffer[128];  // 调试信息缓冲区
+  
   for(;;)
   {
-    // gps数据通过串口中断接收并存储在gps_data结构体中，定期打印到调试串口
-    sprintf(Buffer, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
-    Debug_USART_Show(Buffer);
-
-    // 显示剩余堆内存，返回值单位是字节
-    sprintf(Buffer, "Free Heap: %u\r\n", xPortGetFreeHeapSize());
-    Debug_USART_Show(Buffer);
-
-    // 显示栈剩余空间，返回值代为是字
-    sprintf(Buffer, "FOC stack left: %u\r\n", uxTaskGetStackHighWaterMark(FocTaskHandle));
-    Debug_USART_Show(Buffer);
-
-    // JY901S数据
-    sprintf(Buffer, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
-    Debug_USART_Show(Buffer);
+    // 通信任务运行
+    Communication_Task();
 
     // 每500ms打印一次
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
