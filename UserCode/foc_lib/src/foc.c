@@ -11,7 +11,7 @@
 
 #include "foc.h"
 
-#define ONLY_OPEN_LOOP
+// #define ONLY_OPEN_LOOP
 
 foc_handle_t FOC_Motor[MAX_MOTOR_NUM + 1] = {0};
 uint32_t vofa_cnt = 0;
