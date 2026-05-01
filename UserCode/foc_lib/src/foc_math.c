@@ -40,9 +40,9 @@ float FOC_calc_dynamic_lpf(float speed_rpm)
     
     // 限制范围
     if (fc_target < 100.0f)  fc_target = 100.0f;   // 最低100Hz
-    if (fc_target > 2000.0f) fc_target = 2000.0f;   // 最高2000Hz
+    if (fc_target > 5000.0f) fc_target = 5000.0f;   // 最高2000Hz 
     
-    // 反算α
+    // 反算α。
     // fc = lfp × fs / (2π × (1-lfp))
     // lfp = 2π × fc × TS / (1 + 2π × fc × TS)
     float wc_ts = _2_PI * fc_target * TS;
@@ -99,7 +99,7 @@ void FOC_Motor_Cali_Offset(foc_handle_t *motor)
         HAL_Delay(1);
     }
     motor->i_cali_uvw.v = sum_iu / cali_cnt;
-    motor->i_cali_uvw.u = sum_iw / cali_cnt;
+    motor->i_cali_uvw.w = sum_iw / cali_cnt;
 }
 
 /**

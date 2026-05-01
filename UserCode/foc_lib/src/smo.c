@@ -2,8 +2,8 @@
  * @file smo.c
  * @author MING
  * @brief 滑膜观测器的算法主要在这个文件之中
- * @version 0.1
- * @date 2026-03-22
+ * @version 1.0
+ * @date 2026-04-23
  * 
  * @copyright Copyright (c) 2026
  * 
@@ -38,11 +38,24 @@ void BEMF_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     
     // 软限幅
     float e_amp_min = 0.5f;
-    if (e_amp > e_amp_min) {
+    if (e_amp > e_amp_min)
+    {
         angle_error /= e_amp;
-    } else if (e_amp > 0.1f) {
+    }
+    else if (e_amp > 0.1f)
+    {
         angle_error = angle_error / e_amp_min * (e_amp / e_amp_min); // 线性衰减到0
-    } else {
+    }
+    else if(e_amp < -e_amp_min)
+    {
+        angle_error /= e_amp;
+    }
+    else if (e_amp < -0.1f)
+    {
+        angle_error = angle_error / e_amp_min * (e_amp / e_amp_min);
+    }
+    else
+    {
         angle_error = 0.0f;
     }
     
@@ -72,7 +85,7 @@ void BEMF_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
 }
 
 /**
- * @brief BEMF观测器的算法
+ * @brief SMO观测器的算法
  * 
  * @param motor 电机结构体
  * @param dt 单位时间
@@ -100,8 +113,9 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
                        + b * (motor->u_ab.beta  - z_beta);
     
     // ===== 第4步：BEMF = 切换项的低通滤波 =====
-    motor->e_ab.alpha += (z_alpha - motor->e_ab.alpha) * FOC_calc_dynamic_lpf(OPEN_LOOP_SPEED_RPM);
-    motor->e_ab.beta  += (z_beta  - motor->e_ab.beta)  * FOC_calc_dynamic_lpf(OPEN_LOOP_SPEED_RPM);
+    float speed_rpm = fabsf(motor->speed_observer) * 60.0f / _2_PI_POLE_PAIRS;
+    motor->e_ab.alpha += (z_alpha - motor->e_ab.alpha) * FOC_calc_dynamic_lpf(speed_rpm);
+    motor->e_ab.beta  += (z_beta  - motor->e_ab.beta)  * FOC_calc_dynamic_lpf(speed_rpm);
 
     // ===== 第5步：PLL（与你原来的一样）=====
     float cos_obs = cosf(motor->theta_Observer);
@@ -123,29 +137,36 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
         angle_error = 0.0f;
     }
     
-    // pll锁相环
-    motor->pi_pll.integral += angle_error * PLL_KI * dt;
-    
-    // 积分限幅
-    if(motor->pi_pll.integral >  OB_SPEED_LIMIT) motor->pi_pll.integral =  OB_SPEED_LIMIT;
-    if(motor->pi_pll.integral < -OB_SPEED_LIMIT) motor->pi_pll.integral = -OB_SPEED_LIMIT;
-    
-    // 速度低通滤波
-    float speed_raw = PLL_KP * angle_error + motor->pi_pll.integral;
-    motor->speed_observer += (speed_raw - motor->speed_observer) * 0.30f;
-    
-    // 观测器估测速度限幅
+    // Step7：根据转速方向选择正确的atan2公式
+    float hyst = OPEN_LOOP_SPEED_RPM * 0.2f;
+    if(motor->speed_observer > hyst) motor->speed_sign = 1.0f;
+    else if(motor->speed_observer < -hyst) motor->speed_sign = -1.0f;
+
+    float sign = motor->speed_sign;
+    float theta_new = atan2f(-sign * motor->e_ab.alpha, sign * motor->e_ab.beta)
+                    + calc_compensation_angle(motor->speed_observer);
+    theta_new = fmodf(theta_new, _2_PI);
+    if(theta_new < 0) theta_new += _2_PI;
+
+    // Step8：用新旧角度微分估速（顺序修正）
+    float dtheta = theta_new - motor->theta_Observer; // 新-旧，顺序正确
+    if (dtheta >  PI) dtheta -= _2_PI;
+    if (dtheta < -PI) dtheta += _2_PI;
+
+    float speed_from_diff = dtheta / dt;
+
+    // 对角速度进行低通滤波
+    motor->speed_observer += (speed_from_diff - motor->speed_observer) * 0.01f;
+
+    // 角速度限幅
     if(motor->speed_observer >  OB_SPEED_LIMIT) motor->speed_observer =  OB_SPEED_LIMIT;
     if(motor->speed_observer < -OB_SPEED_LIMIT) motor->speed_observer = -OB_SPEED_LIMIT;
-    
-    motor->theta_Observer += motor->speed_observer * dt;
-    motor->theta_Observer = atan2f(-motor->e_ab.alpha, motor->e_ab.beta) + calc_compensation_angle(motor->theta_Observer);
-    motor->theta_Observer = fmodf(motor->theta_Observer, _2_PI);
-    if(motor->theta_Observer < 0) motor->theta_Observer += _2_PI;
-    
+
+    motor->theta_Observer = theta_new; // 更新角度
+
     if(mode == MOTOR_STATE_CLOSE)
         motor->theta = motor->theta_Observer;
-    
+
     motor->speed = motor->speed_observer * 60.0f / _2_PI_POLE_PAIRS;
 }
 

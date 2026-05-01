@@ -22,7 +22,8 @@ extern "C" {
 
 /************************* 数据结构定义 *************************/
 typedef enum {
-    MOTOR_STATE_ALIGN = 0, // 转子定位
+    MOTOR_STATE_IDLE = 0,  // ← 新增：空闲/停机等待
+    MOTOR_STATE_ALIGN, // 转子定位
     MOTOR_STATE_OPEN,      // 开环强拉
     MOTOR_STATE_CLOSE      // 闭环运行
 } foc_mode_t;
@@ -125,7 +126,9 @@ typedef struct
     float                   theta;              // 转子电角度(rad)
     float                   speed;              // 电机转速(rpm)
     float                   theta_Observer;     // 观测器得到的转子电角度(rad)
+    float                   theta_obs_prev;     // 上一拍观测角度，用于微分估速
     float                   speed_observer;     // 观测器得到的电机转速(rpm)
+    float                   speed_sign;         // 电机转子正转还是反转
 
     /*目标值*/      
     float                   target_iq;          // q轴电流目标值
