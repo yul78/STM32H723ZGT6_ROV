@@ -2,8 +2,8 @@
  * @file foc.c
  * @author MING
  * @brief foc调用库
- * @version 0.4
- * @date 2026-04-23
+ * @version 0.5
+ * @date 2026-05-01
  * 
  * @copyright Copyright (c) 2026
  * 
@@ -17,9 +17,8 @@ uint32_t vofa_cnt = 0;
 /**
  * @brief foc初始化
  * 
- * @param motor_num 电机序号，从1开始
- * @param hal_interface 用户层的HAL接口
- * @return foc_state_t foc初始化状态
+ * @param motor 
+ * @return foc_state_t 
  */
 foc_state_t Foc_Init(uint8_t motor_num, const foc_hal_t *hal_interface)
 {
@@ -42,9 +41,8 @@ foc_state_t Foc_Init(uint8_t motor_num, const foc_hal_t *hal_interface)
 /**
  * @brief foc参数初始化
  * 
- * @param motor_num 电机序号，从1开始
- * @param hal_interface 用户层的HAL接口
- * @return foc_state_t foc状态
+ * @param motor 
+ * @return foc_state_t 
  */
 foc_state_t Foc_ParamInit(foc_handle_t *motor, const foc_hal_t *hal_interface)
 {
@@ -115,8 +113,8 @@ foc_state_t Foc_Deinit(foc_handle_t *motor)
 /**
  * @brief foc主循环，用于在定时器中调用，采用了分段式处理，开环强拉到闭环状态
  * 
- * @param motor_num 电机序号，从1开始 
- * @return foc_state_t foc状态
+ * @param motor 
+ * @return foc_state_t 
  */
 foc_state_t Foc_Loop(uint8_t motor_num)
 {
@@ -125,18 +123,12 @@ foc_state_t Foc_Loop(uint8_t motor_num)
     if (motor->init_done != 1)
         return FOC_ERR_LOOP; // 初始化未完成，直接返回
 
-    motor->hal.adc_get_value
-    (
-        motor_num, 
-        &motor->i_adc_u, 
-        &motor->i_adc_v, 
-        &motor->i_adc_w
-    );
+    motor->hal.adc_get_value(motor_num, &motor->i_adc_u, &motor->i_adc_v, &motor->i_adc_w);
 
     switch (motor->mode)
     {
     case MOTOR_STATE_IDLE: // 空状态
-        // 每个控制周期都刷新为零电压，防止PWM寄存器残留
+        // ✅ 每个控制周期都刷新为零电压，防止PWM寄存器残留
         motor->hal.pwm_set_duty(motor->num,
             PWM_ARR / 2, PWM_ARR / 2, PWM_ARR / 2);
 
@@ -203,10 +195,11 @@ foc_state_t Foc_Loop(uint8_t motor_num)
 
         motor->state_timer++;
 
+        #ifndef ONLY_OPEN_LOOP
         // 观测速度与开环速度接近才切换
         float speed_rpm = motor->speed_observer * 60.0f / _2_PI_POLE_PAIRS; // 把电角速度转换为圈每秒
         float speed_diff = fabsf(fabsf(speed_rpm) - fabsf(OPEN_LOOP_SPEED_RPM));
-        if (motor->state_timer > 8500 && speed_diff < OPEN_LOOP_SPEED_RPM * 0.2f)
+        if (motor->state_timer > 8500 && speed_diff < OPEN_LOOP_SPEED_RPM * 0.1f)
         {
             motor->pi_d.integral = 0.0f;
             motor->pi_d.output = 0.0f;
@@ -234,6 +227,8 @@ foc_state_t Foc_Loop(uint8_t motor_num)
 
             motor->mode = MOTOR_STATE_CLOSE;
         }
+        #endif
+
         break;
 
     case MOTOR_STATE_CLOSE:
@@ -241,7 +236,7 @@ foc_state_t Foc_Loop(uint8_t motor_num)
         // 闭环期间若遥控器归零 → 回 IDLE
         if (fabsf(motor->target_speed) < SPEED_START_THRESHOLD)
         {
-            // ✅ 先归零PWM再切状态
+            // 先归零PWM再切状态
             motor->hal.pwm_set_duty(motor->num,
                 PWM_ARR / 2, PWM_ARR / 2, PWM_ARR / 2);
             // 同时清空SMO残留状态，防止下次重启时观测器从错误状态收敛
@@ -276,15 +271,15 @@ foc_state_t Foc_Loop(uint8_t motor_num)
 /**
  * @brief 开环控制
  * 
- * @param motor 电机结构体指针
- * @param dt 单位时间
- * @return foc_state_t foc状态
+ * @param motor 
+ * @param dt 
+ * @return foc_state_t 
  */
 foc_state_t Foc_Open_Loop(foc_handle_t *motor, float dt)
 {
     // 1. 电流校准（减去零点偏移）
     motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.v) * CURRENT_SCALE;
-    motor->i_uvw.u = -(float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.u) * CURRENT_SCALE;
+    motor->i_uvw.u = (float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
     motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
                                                                                                           : motor->i_uvw.v;
@@ -318,15 +313,15 @@ foc_state_t Foc_Open_Loop(foc_handle_t *motor, float dt)
 /**
  * @brief 开环控制测试代码
  * 
- * @param motor 电机结构体指针
- * @param dt 单位时间
- * @return foc_state_t foc状态
+ * @param motor 
+ * @param dt 
+ * @return foc_state_t 
  */
 foc_state_t Foc_Open_Loop_Test(foc_handle_t *motor, float dt)
 {
     // 1. 电流校准（减去零点偏移）
     motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.v) * CURRENT_SCALE;
-    motor->i_uvw.u = -(float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.u) * CURRENT_SCALE;
+    motor->i_uvw.u = -(float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
     motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
                                                                                                           : motor->i_uvw.v;
@@ -370,9 +365,9 @@ foc_state_t Foc_Open_Loop_Test(foc_handle_t *motor, float dt)
 /**
  * @brief 闭环控制
  * 
- * @param motor 电机结构体指针
- * @param dt 单位时间
- * @return foc_state_t foc状态
+ * @param motor 
+ * @param dt 
+ * @return foc_state_t 
  */
 foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 {
@@ -388,7 +383,7 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 
     // 1. 电流校准（减去零点偏移）
     motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.v) * CURRENT_SCALE;
-    motor->i_uvw.u = -(float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.u) * CURRENT_SCALE;
+    motor->i_uvw.u = (float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
     motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
                                                                                                           : motor->i_uvw.v;
@@ -432,11 +427,11 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 
         float spd_err = motor->speed_ramp_target - motor->speed;
 
-        motor->pi_speed.integral += PI_KI_SPEED * spd_err * (dt * 10.0f);
+        motor->pi_speed.integral += PI_KI_SPEED * spd_err * (dt * 10.0f); // 速度积分
 
-        motor->pi_speed.integral = fmaxf(-PI_LIMIT_SPEED, fminf(PI_LIMIT_SPEED, motor->pi_speed.integral));
+        motor->pi_speed.integral = fmaxf(-PI_LIMIT_SPEED, fminf(PI_LIMIT_SPEED, motor->pi_speed.integral)); // 速度积分限幅
 
-        float iq_p = PI_KP_SPEED * spd_err;
+        float iq_p = PI_KP_SPEED * spd_err; // 速度环比例
         float iq_cmd = iq_p + motor->pi_speed.integral;
 
         iq_cmd = fmaxf(-PI_LIMIT_SPEED, fminf(PI_LIMIT_SPEED, iq_cmd));
@@ -446,6 +441,7 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     }
     motor->pi_d.target = 0.0f; // id始终为0
 
+    // motor->theta = 0;
     // vofa_cnt++;
     // if(vofa_cnt >= 17000 && vofa_cnt < 34000)
     // {
@@ -492,8 +488,8 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 /**
  * @brief foc失能
  * 
- * @param motor_num 电机序号，从1开始 
- * @return foc_state_t foc状态
+ * @param motor 
+ * @return foc_state_t 
  */
 foc_state_t Foc_Stop(uint8_t motor_num)
 {
@@ -506,9 +502,9 @@ foc_state_t Foc_Stop(uint8_t motor_num)
 /**
  * @brief 设置目标速度
  * 
- * @param motor_num 电机序号，从1开始 
- * @param speed 电机的目标速度
- * @return foc_state_t foc状态
+ * @param motor 
+ * @param speed 
+ * @return foc_state_t 
  */
 foc_state_t Foc_Set_Speed(uint8_t motor_num, float speed)
 {

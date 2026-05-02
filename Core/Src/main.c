@@ -135,11 +135,7 @@ int main(void)
   Water_Tank_Init(); // 初始化排水，会卡死
   WaterADC_Init();
   APP_GPS_Init();
-  APP_Thrusters_Init();
-
-  // 无刷电机初始化
-  Foc_Init(1, &foc_hal);
-  Foc_Init(2, &foc_hal);
+  APP_Thrusters_Init(); // 无刷电机初始化
   
   HAL_Delay(50);
 

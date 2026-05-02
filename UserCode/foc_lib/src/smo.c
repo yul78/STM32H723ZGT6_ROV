@@ -155,9 +155,10 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
 
     float speed_from_diff = dtheta / dt;
 
-    // 加大LPF力度，从0.05改到0.01
+    // 对角速度进行低通滤波
     motor->speed_observer += (speed_from_diff - motor->speed_observer) * 0.01f;
 
+    // 角速度限幅
     if(motor->speed_observer >  OB_SPEED_LIMIT) motor->speed_observer =  OB_SPEED_LIMIT;
     if(motor->speed_observer < -OB_SPEED_LIMIT) motor->speed_observer = -OB_SPEED_LIMIT;
 

@@ -97,7 +97,7 @@ void Debug_USART_Show(const char* str);
 #define EN1OUT_GPIO_Port GPIOC
 
 /* USER CODE BEGIN Private defines */
-#define DEBUG_huart huart6
+#define DEBUG_huart huart10
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

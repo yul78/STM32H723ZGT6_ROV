@@ -211,15 +211,19 @@ void vFocTask(void *argument)
 {
   /* USER CODE BEGIN vFocTask */
   /* Infinite loop */
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   HAL_TIM_Base_Start_IT(&htim3);
   for(;;)
   {
     // TIM3中断中每10ms释放一次
     // 等待中断通知
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
     // Foc任务运行
     Foc_Task();
+
+    // 每10ms检查一次
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));
   }
   /* USER CODE END vFocTask */
 }
@@ -281,6 +285,10 @@ void vCommTask(void *argument)
 {
   /* USER CODE BEGIN vCommTask */
   /* Infinite loop */
+
+  // 任务挂起
+  // vTaskSuspend(NULL);
+  
   TickType_t xLastWakeTime = xTaskGetTickCount();
   
   for(;;)
