@@ -70,7 +70,44 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void Print1_Motor_To_VOFA(float data, uint8_t length)
+{
+    char uart_buf[20];
+    sprintf(uart_buf, "%.6f\n", data);
+    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, length, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t *)"\n", 1, 100);
+}
 
+void Print2_Motor_To_VOFA(float data1, float data2)
+{
+
+    char uart_buf[256]; // 足够长以容纳三个数据
+    // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
+    int len = sprintf(uart_buf, "%.3f,%.3f\n", data1, data2);
+    
+    // 一次性发送，不要分段发送逗号和换行
+    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+}
+
+void Print3_Motor_To_VOFA(float data1, float data2, float data3)
+{
+    char uart_buf[256]; // 足够长以容纳三个数据
+    // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
+    int len = sprintf(uart_buf, "%.3f,%.3f,%.3f\n", data1, data2, data3);
+    
+    // 一次性发送，不要分段发送逗号和换行
+    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+}
+
+void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
+{
+    char uart_buf[256]; // 足够长以容纳三个数据
+    // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
+    int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f\n", data1, data2, data3, data4);
+    
+    // 一次性发送，不要分段发送逗号和换行
+    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+}
 /* USER CODE END 0 */
 
 /**
@@ -81,7 +118,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  //SCB_DisableDCache();
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -147,6 +184,7 @@ int main(void)
   GamepadData_t *pad;
 
   HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
+  
   while (1)
   {
 
@@ -159,6 +197,11 @@ int main(void)
     // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
 
     /***********游戏手柄控制无刷电机************/
+    // HAL_GPIO_WritePin(USART2_485_GPIO_Port, USART2_485_Pin, GPIO_PIN_RESET); // 485接收使能
+    // Foc_Set_Speed(2, -1000);
+    // Foc_Set_Speed(1, 1000);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].i_uvw.u, FOC_Motor[2].i_uvw.v, FOC_Motor[2].i_uvw.w);
+    // HAL_UART_Transmit(&huart2, "1", 2, 10);
 
     Gamepad_Control();  // 游戏手柄控制无刷电机
     pad = Gamepad_GetData();

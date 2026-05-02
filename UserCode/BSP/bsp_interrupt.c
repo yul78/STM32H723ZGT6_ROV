@@ -1,4 +1,5 @@
 #include "bsp_interrupt.h"
+#include "foc.h"
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {

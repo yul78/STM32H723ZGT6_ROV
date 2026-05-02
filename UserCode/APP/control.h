@@ -8,6 +8,7 @@
 #include "PID.h"
 #include "bsp_jy901.h"
 #include "jy901.h"
+#include "foc.h"
 
 void Gamepad_Control(void);
 void FOC_Set_Speed(uint8_t motor_num, int16_t speed);

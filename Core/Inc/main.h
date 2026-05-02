@@ -95,6 +95,8 @@ void Debug_USART_Show(const char* str);
 #define LED_GPIO_Port GPIOG
 #define EN1OUT_Pin GPIO_PIN_10
 #define EN1OUT_GPIO_Port GPIOC
+#define USART2_485_Pin GPIO_PIN_4
+#define USART2_485_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 #define DEBUG_huart huart6

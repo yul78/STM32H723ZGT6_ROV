@@ -11,8 +11,6 @@
 
 #include "foc.h"
 
-// #define ONLY_OPEN_LOOP
-
 foc_handle_t FOC_Motor[MAX_MOTOR_NUM + 1] = {0};
 uint32_t vofa_cnt = 0;
 
@@ -409,51 +407,51 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     motor->i_dq.q = -motor->i_ab.alpha * sin_th + motor->i_ab.beta * cos_th;
 
     // 6. 速度环PI调节
-    // motor->PI_Speed_cnt++;
-    // if (motor->PI_Speed_cnt >= 10)
-    // {
-    //     motor->PI_Speed_cnt = 0;
-
-    //     if(motor->target_speed > motor->speed_ramp_target)
-    //     {
-    //         motor->speed_ramp_target += SPEED_RAMP_RATE * dt * 10.0f;
-    //         if (motor->speed_ramp_target > motor->pi_speed.target)
-    //             motor->speed_ramp_target = motor->pi_speed.target;
-    //     }
-    //     else if(motor->target_speed < motor->speed_ramp_target)
-    //     {
-    //         motor->speed_ramp_target -= SPEED_RAMP_RATE * dt * 10.0f;
-    //         if (motor->speed_ramp_target < motor->pi_speed.target)
-    //             motor->speed_ramp_target = motor->pi_speed.target;
-    //     }
-
-    //     float spd_err = motor->speed_ramp_target - motor->speed;
-
-    //     motor->pi_speed.integral += PI_KI_SPEED * spd_err * (dt * 10.0f); // 速度积分
-
-    //     motor->pi_speed.integral = fmaxf(-PI_LIMIT_SPEED, fminf(PI_LIMIT_SPEED, motor->pi_speed.integral)); // 速度积分限幅
-
-    //     float iq_p = PI_KP_SPEED * spd_err; // 速度环比例
-    //     float iq_cmd = iq_p + motor->pi_speed.integral;
-
-    //     iq_cmd = fmaxf(-PI_LIMIT_SPEED, fminf(PI_LIMIT_SPEED, iq_cmd));
-
-    //     motor->pi_speed.output = iq_cmd;
-    //     motor->pi_q.target = iq_cmd;
-    // }
-    // motor->pi_d.target = 0.0f; // id始终为0
-
-    motor->theta = 0;
-    vofa_cnt++;
-    if(vofa_cnt >= 17000 && vofa_cnt < 34000)
+    motor->PI_Speed_cnt++;
+    if (motor->PI_Speed_cnt >= 10)
     {
-        motor->pi_q.target = 4.0f; // 速度环输出→iq目标
+        motor->PI_Speed_cnt = 0;
+
+        if(motor->target_speed > motor->speed_ramp_target)
+        {
+            motor->speed_ramp_target += SPEED_RAMP_RATE * dt * 10.0f;
+            if (motor->speed_ramp_target > motor->pi_speed.target)
+                motor->speed_ramp_target = motor->pi_speed.target;
+        }
+        else if(motor->target_speed < motor->speed_ramp_target)
+        {
+            motor->speed_ramp_target -= SPEED_RAMP_RATE * dt * 10.0f;
+            if (motor->speed_ramp_target < motor->pi_speed.target)
+                motor->speed_ramp_target = motor->pi_speed.target;
+        }
+
+        float spd_err = motor->speed_ramp_target - motor->speed;
+
+        motor->pi_speed.integral += PI_KI_SPEED * spd_err * (dt * 10.0f); // 速度积分
+
+        motor->pi_speed.integral = fmaxf(-PI_LIMIT_SPEED, fminf(PI_LIMIT_SPEED, motor->pi_speed.integral)); // 速度积分限幅
+
+        float iq_p = PI_KP_SPEED * spd_err; // 速度环比例
+        float iq_cmd = iq_p + motor->pi_speed.integral;
+
+        iq_cmd = fmaxf(-PI_LIMIT_SPEED, fminf(PI_LIMIT_SPEED, iq_cmd));
+
+        motor->pi_speed.output = iq_cmd;
+        motor->pi_q.target = iq_cmd;
     }
-    else if(vofa_cnt > 0 && vofa_cnt < 17000) 
-        motor->pi_q.target = 2.0f; // 速度环输出→iq目标
-    else 
-        vofa_cnt = 0;
-    motor->pi_d.target = 0.0f;                   // id始终为0
+    motor->pi_d.target = 0.0f; // id始终为0
+
+    // motor->theta = 0;
+    // vofa_cnt++;
+    // if(vofa_cnt >= 17000 && vofa_cnt < 34000)
+    // {
+    //     motor->pi_q.target = 4.0f; // 速度环输出→iq目标
+    // }
+    // else if(vofa_cnt > 0 && vofa_cnt < 17000) 
+    //     motor->pi_q.target = 2.0f; // 速度环输出→iq目标
+    // else 
+    //     vofa_cnt = 0;
+    // motor->pi_d.target = 0.0f;                   // id始终为0
 
     // 6. 电流环PI调节
     motor->pi_d.feedback = motor->i_dq.d;
