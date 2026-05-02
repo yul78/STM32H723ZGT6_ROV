@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2025 STMicroelectronics.
+  * Copyright (c) 2026 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -26,17 +26,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "H_Tmc2209.h"
-#include "bsp_delay.h"
-// #include "OLED.h"
-// #include "mpu6050.h"
-#include "bsp_jy901.h"
-#include "control.h"
-#include "WaterADC.h"
-#include "WaterTank.h"
-#include "Gamepad.h"
-#include "app_gps.h"
-#include "app_thrusters.h"
+#include "foc.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,12 +61,16 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+extern uint16_t adc2_buf[2];
+extern uint16_t adc1_buf[2];
+// foc_handle_t motor0;
+
 void Print1_Motor_To_VOFA(float data, uint8_t length)
 {
     char uart_buf[20];
     sprintf(uart_buf, "%.6f\n", data);
-    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, length, 100);
-    HAL_UART_Transmit(&huart2, (uint8_t *)"\n", 1, 100);
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, length, 100);
+    HAL_UART_Transmit(&huart10, (uint8_t *)"\n", 1, 100);
 }
 
 void Print2_Motor_To_VOFA(float data1, float data2)
@@ -86,7 +81,7 @@ void Print2_Motor_To_VOFA(float data1, float data2)
     int len = sprintf(uart_buf, "%.3f,%.3f\n", data1, data2);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
 }
 
 void Print3_Motor_To_VOFA(float data1, float data2, float data3)
@@ -96,7 +91,7 @@ void Print3_Motor_To_VOFA(float data1, float data2, float data3)
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f\n", data1, data2, data3);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
 }
 
 void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
@@ -106,7 +101,7 @@ void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f\n", data1, data2, data3, data4);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
 }
 /* USER CODE END 0 */
 
@@ -118,7 +113,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  //SCB_DisableDCache();
+
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -140,191 +135,76 @@ int main(void)
   PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  HAL_Delay(500);  //加个延时等其他设备启动
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_TIM2_Init();
-  MX_TIM5_Init();
-  MX_ADC3_Init();
-  MX_ADC2_Init();
   MX_TIM1_Init();
-  MX_TIM3_Init();
-  MX_USART1_UART_Init();
-  MX_USART3_UART_Init();
-  MX_USART2_UART_Init();
+  MX_ADC2_Init();
+  MX_USART10_UART_Init();
   MX_ADC1_Init();
   MX_TIM8_Init();
   MX_USART6_UART_Init();
-  MX_USART10_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  Gamepad_Init(&gamepad_huart);  // 手柄初始化
-  // OLED_Init();
-  // MPU6050_Init();
-  BSP_JY901_Init();
-  Water_Tank_Init();
-  WaterADC_Init();
-  APP_GPS_Init();
-  APP_Thrusters_Init();
-  HAL_TIM_Base_Start_IT(&htim3);
+  HAL_UART_MspInit(&huart10);
 
-  // 无刷电机初始化
-  Foc_Init(1, &foc_hal);
-  Foc_Init(2, &foc_hal);
+  
+  Foc_Init(1, &foc_hal); // 左边电机
+  Foc_Init(2, &foc_hal); // 右边电机
 
   HAL_Delay(50);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  GamepadData_t *pad;
-
-  HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
-  
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_7, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET); // 485接收使能
   while (1)
   {
-
-    /***********485测试************/
-    // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_SET); // 485发送使能
-    // char *test_str = "Hello, 485!\n";
-    // HAL_UART_Transmit(&huart10, (uint8_t *)test_str, strlen(test_str), 100);
-    // while(__HAL_UART_GET_FLAG(&huart10, UART_FLAG_TC) == RESET);
-    
-    // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
-
-    /***********游戏手柄控制无刷电机************/
-    // HAL_GPIO_WritePin(USART2_485_GPIO_Port, USART2_485_Pin, GPIO_PIN_RESET); // 485接收使能
-    // Foc_Set_Speed(2, -1000);
-    // Foc_Set_Speed(1, 1000);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_uvw.u, FOC_Motor[2].i_uvw.v, FOC_Motor[2].i_uvw.w);
-    // HAL_UART_Transmit(&huart2, "1", 2, 10);
+    // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab.beta);
+    // Print2_Motor_To_VOFA(FOC_Motor[2].e_ab.alpha, FOC_Motor[2].e_ab.beta);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed_observer);
 
-    Gamepad_Control();  // 游戏手柄控制无刷电机
-    pad = Gamepad_GetData();
-    if (pad->isUpdated)
-		{
-			pad->isUpdated = 0;  // 清除标志
-			// ========= 使用手柄数据 =========
-      //Debug_USART_Show("Pad Upadate");
-      //A键：前舱吸水1ml B键：前舱排水1ml X键：后舱吸水1ml Y键：后舱排水1ml
-      if(pad->buttons == 1)
-      {
-        Water_Tank_Filling(&tank_front, 1.0f);
-      }
-      if(pad->buttons == 2)
-      {
-        Water_Tank_Draining(&tank_front, 1.0f);
-      }
-      if(pad->buttons == 4)
-      {
-        Water_Tank_Filling(&tank_rear, 1.0f);
-      }
-      if(pad->buttons == 8)
-      {
-        Water_Tank_Draining(&tank_rear, 1.0f);
-      }
-    }
-
-    /************* OLED显示手柄数据 *************/
-    // OLED_ShowString(0, 0, "LX:", OLED_8X16);
-    // OLED_ShowString(0, 16, "LY:", OLED_8X16);
-    // OLED_ShowString(56, 0, "RX:", OLED_8X16);
-    // OLED_ShowString(56, 16, "RY:", OLED_8X16);
-    // OLED_ShowString(0, 32, "btn:", OLED_8X16);
-    // OLED_ShowString(0, 48, "hatX:", OLED_8X16);
-    // OLED_ShowString(56, 48, "hatY:", OLED_8X16);
-    // OLED_ShowNum(24, 0, pad->leftX, 3, OLED_8X16);
-    // OLED_ShowNum(24, 16, pad->leftY, 3, OLED_8X16);
-
-    // OLED_ShowNum(80, 0, pad->rightX, 3, OLED_8X16);
-    // OLED_ShowNum(80, 16, pad->rightY, 3, OLED_8X16);
-
-    // OLED_ShowNum(32, 32, pad->buttons, 4, OLED_8X16);
-    // OLED_ShowNum(40, 48, pad->hatX, 1, OLED_8X16);
-    // OLED_ShowNum(96, 48, pad->hatY, 1, OLED_8X16);
-
-    // OLED_ShowNum(72, 32, pad->lt, 2, OLED_8X16);
-    // OLED_ShowNum(96, 32, pad->rt, 2, OLED_8X16);
-    //OLED_ShowString(0,0,"hello,723!",OLED_8X16);
-    
-    /************* OLED显示JY901S物理数据 *************/
-    JY901_Task();
-    char jy_info[128];
-    sprintf(jy_info, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
-    //Debug_USART_Show(jy_info);
-    // OLED_ShowFloatNum(0, 0, jy901_data.ax,2, 2, OLED_8X16);       // X轴加速度（单位：g）
-    // OLED_ShowFloatNum(0, 16, jy901_data.ay,2, 2, OLED_8X16);      // Y轴加速度（单位：g）
-    // OLED_ShowFloatNum(0, 32, jy901_data.az, 2, 2, OLED_8X16);     // Z轴加速度（单位：g）
-
-    // OLED_ShowFloatNum(0, 0, jy901_data.gx, 2, 2, OLED_8X16);      // X轴角速度（单位：度每秒）
-    // OLED_ShowFloatNum(0, 16, jy901_data.gy, 2, 2, OLED_8X16);     // Y轴角速度（单位：度每秒）
-    // OLED_ShowFloatNum(0, 32, jy901_data.gz, 2, 2, OLED_8X16);     // Z轴角速度（单位：度每秒）
-
-    //OLED_ShowFloatNum(0, 0, jy901_data.roll,2, 2, OLED_8X16);        // 欧拉角（单位：度）
-    // OLED_ShowFloatNum(0, 16, jy901_data.pitch, 2, 2, OLED_8X16);     // 欧拉角（单位：度）
-    //OLED_ShowFloatNum(0, 48, jy901_data.yaw, 2, 2, OLED_8X16);       // 欧拉角（单位：度）
-
-    /************* 获取GPS数据 *************/
-    APP_GPS_Task();
-    char gps_info[128];
-    sprintf(gps_info, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
-    Debug_USART_Show(gps_info);
-
-    /**************** OLED显示ADC采样值 ****************/
-    // OLED_ShowNum(64, 0, adc_value[0], 5, OLED_8X16);
-    // OLED_ShowNum(64, 16, adc_value[1], 5, OLED_8X16);
-    char  water_adc_info[128];
-    sprintf(water_adc_info, "Voltage: %.2fV, %.2fV\n", voltage_value[0], voltage_value[1]);
-    //Debug_USART_Show(water_adc_info);
-    if(Water_Check()) 
-    {
-      Debug_USART_Show("Water detected! Start draining...\r\n"); //调试信息
-      Water_Tank_Draining_To_Empty(&tank_front);
-      //Water_Tank_Draning_To_Empty(&tank_rear);
-      Debug_USART_Show("Draing finished...\r\n"); //调试信息
-      while(1);
-    };
-    // OLED_ShowFloatNum(0, 48, voltage_value[0], 1, 1, OLED_8X16);    
-    // OLED_ShowFloatNum(64, 48,voltage_value[1], 1, 1, OLED_8X16);      
-
-    /*********************步进电机**********************/
-    // if(jy901_data.roll > 10)
-    // {
-    //     Motor_Set(1, 2, 1, 800,400,2400,800);
-    //     Motor_Set(2, 2, 1, 800,400,2400,800);
-    // }
-    // else if(jy901_data.roll < -10)
-    // {
-    //     Motor_Set(1, 2, 0, 800,400,2400,800);
-    //     Motor_Set(2, 2, 0, 800,400,2400,800);
-    // }
-    //OLED_ShowNum(64, 32, Motor_GetStep(1), 5, OLED_8X16);
-    
-    /*********************水舱**********************/
-    //OLED_ShowNum(0,16, tank_front.state, 1, OLED_8X16);
-    //OLED_ShowFloatNum(0, 32, tank_front.now_water_volume, 2, 2, OLED_8X16);
-    
-    //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
-    //Water_Tank_Front_Get_Volume();
-    //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
-    //OLED_ShowFloatNum(64, 32, tank_rear.now_water_volume, 2, 2, OLED_8X16);
-    //OLED_ShowFloatNum(64, 32, tank_front.target_water_volume, 2, 2, OLED_8X16);
-    
+    // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].pi_q.target);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].theta_Observer, FOC_Motor[2].theta, FOC_Motor[2].pi_q.target);
+    Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.output);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].i_ab_hat.alpha, FOC_Motor[2].i_ab_hat.beta, angle_error);
+    // Print4_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed, angle_error);
+    // Print4_Motor_To_VOFA(
+    //     FOC_Motor[2].i_dq.d,          // 期望≈0
+    //     FOC_Motor[2].i_dq.q,          // 期望≈正值稳定
+    //     FOC_Motor[2].speed,            // 期望≈target_speed
+    //     FOC_Motor[2].theta_Observer    // 观察是否平滑
+    // );
+    // Print4_Motor_To_VOFA(
+    //     FOC_Motor[2].speed,              // 实际转速
+    //     FOC_Motor[2].pi_speed.target,    // 速度目标（斜坡后）
+    //     FOC_Motor[2].i_dq.q,             // Iq（力矩电流）
+    //     FOC_Motor[2].i_dq.d              // Id（应接近0）
+    // );
+    // Print2_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].i_dq.d);
+    Foc_Set_Speed(2, -3000);
+    // Foc_Set_Speed(1, 50);
+    // Print2_Motor_To_VOFA((float)adc2_buf[0], (float)adc1_buf[1]);
+    // 速度环调试需要看4个量
+    // 改为打印这4个量（用Print3打前3个，observer_speed最重要）
+    // Print3_Motor_To_VOFA(motor0.speed, motor0.speed_ramp_target, motor0.theta);
+    // Print3_Motor_To_VOFA(motor0.speed, motor0.speed_ramp_target, angle_error);
+    // Print3_Motor_To_VOFA(motor0.theta, theta_Observer, angle_error);
+    // Print2_Motor_To_VOFA(motor0.e_alpha, motor0.e_beta);
+    // Print2_Motor_To_VOFA(motor0.i_alpha, motor0.i_beta);
+    // Print2_Motor_To_VOFA(motor0.adc_iu, motor0.adc_iw);
+    // Print2_Motor_To_VOFA(motor0.i_q, motor0.i_d);
+    // Print2_Motor_To_VOFA(motor0.i_q, angle_error);
+    // Print2_Motor_To_VOFA(motor0.theta, theta_Observer);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //OLED_Update();
-
-    //水舱状态机更新
-    Water_Tank_Update_Handler(&tank_front); 
-    Water_Tank_Update_Handler(&tank_rear);
-
-    HAL_Delay(20);
-    
   }
   /* USER CODE END 3 */
 }
@@ -415,9 +295,20 @@ void PeriphCommonClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void Debug_USART_Show(const char* str)
+
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    HAL_UART_Transmit(&DEBUG_huart, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+    if(htim->Instance == TIM1)
+    {
+        Foc_Loop(2);
+        HAL_GPIO_WritePin(GPIOG, GPIO_PIN_7, GPIO_PIN_RESET);
+    }
+    if(htim->Instance == TIM8)
+    {
+        Foc_Loop(1);
+        HAL_GPIO_WritePin(GPIOG, GPIO_PIN_7, GPIO_PIN_SET);
+    }
 }
 /* USER CODE END 4 */
 
