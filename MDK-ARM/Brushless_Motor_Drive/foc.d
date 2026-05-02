@@ -1,0 +1,10 @@
+brushless_motor_drive\foc.o: ..\foc_lib\src\foc.c
+brushless_motor_drive\foc.o: ../foc_lib/inc/foc.h
+brushless_motor_drive\foc.o: ../foc_lib/inc/foc_types.h
+brushless_motor_drive\foc.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdint.h
+brushless_motor_drive\foc.o: ../foc_lib/inc/foc_hal.h
+brushless_motor_drive\foc.o: ../foc_lib/inc/smo.h
+brushless_motor_drive\foc.o: ../foc_lib/inc/foc_config.h
+brushless_motor_drive\foc.o: D:\keil5\ARM\ARMCC\Bin\..\include\math.h
+brushless_motor_drive\foc.o: ../foc_lib/inc/foc_math.h
+brushless_motor_drive\foc.o: ../foc_lib/inc/foc_utils.h
