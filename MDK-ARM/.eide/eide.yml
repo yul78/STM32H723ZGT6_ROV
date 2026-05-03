@@ -101,7 +101,8 @@ targets:
         - .cmsis/include
         - RTE/_Brushless_Motor_Drive
       libList: []
-    excludeList: []
+    excludeList:
+      - <virtual_root>/foc_lib
     settings:
       debugger: cortex-debug
     toolchain: AC5
