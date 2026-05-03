@@ -55,6 +55,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 void Debug_USART_Show(const char* str);
+void FOC_DEBUG_Show(const char* str);
 
 /* USER CODE END EFP */
 
@@ -99,7 +100,8 @@ void Debug_USART_Show(const char* str);
 #define USART2_485_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
-#define DEBUG_huart huart6
+#define DEBUG_huart huart10
+#define FOC_DEBUG_huart huart6
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -86,7 +86,7 @@ void Print2_Motor_To_VOFA(float data1, float data2)
     int len = sprintf(uart_buf, "%.3f,%.3f\n", data1, data2);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+    FOC_DEBUG_Show(uart_buf);
 }
 
 void Print3_Motor_To_VOFA(float data1, float data2, float data3)
@@ -96,7 +96,7 @@ void Print3_Motor_To_VOFA(float data1, float data2, float data3)
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f\n", data1, data2, data3);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+    FOC_DEBUG_Show(uart_buf);
 }
 
 void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
@@ -106,7 +106,7 @@ void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f\n", data1, data2, data3, data4);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, len, 10);
+    FOC_DEBUG_Show(uart_buf);
 }
 /* USER CODE END 0 */
 
@@ -166,15 +166,11 @@ int main(void)
   // OLED_Init();
   // MPU6050_Init();
   BSP_JY901_Init();
-  Water_Tank_Init();
+  // Water_Tank_Init();
   WaterADC_Init();
   APP_GPS_Init();
-  APP_Thrusters_Init();
+  APP_Thrusters_Init(); // 无刷电机初始化
   HAL_TIM_Base_Start_IT(&htim3);
-
-  // 无刷电机初始化
-  Foc_Init(1, &foc_hal);
-  Foc_Init(2, &foc_hal);
 
   HAL_Delay(50);
   /* USER CODE END 2 */
@@ -187,6 +183,9 @@ int main(void)
   
   while (1)
   {
+    char foc_debug[128];
+    sprintf(foc_debug, "foc debug\r\n");
+    FOC_DEBUG_Show(foc_debug);
 
     /***********485测试************/
     // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_SET); // 485发送使能
@@ -418,6 +417,11 @@ void PeriphCommonClock_Config(void)
 void Debug_USART_Show(const char* str)
 {
     HAL_UART_Transmit(&DEBUG_huart, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+}
+
+void FOC_DEBUG_Show(const char* str)
+{
+    HAL_UART_Transmit(&FOC_DEBUG_huart, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
 /* USER CODE END 4 */
 
