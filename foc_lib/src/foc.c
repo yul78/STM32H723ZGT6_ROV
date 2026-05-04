@@ -2,8 +2,8 @@
  * @file foc.c
  * @author MING
  * @brief foc调用库
- * @version 0.5
- * @date 2026-05-01
+ * @version 0.6
+ * @date 2026-05-04
  * 
  * @copyright Copyright (c) 2026
  * 
@@ -283,8 +283,8 @@ foc_state_t Foc_Open_Loop(foc_handle_t *motor, float dt)
     // 2. 电流限幅（保护电机）
     motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
                                                                                                           : motor->i_uvw.v;
-    motor->i_uvw.u = (motor->i_uvw.u > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.u < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-                                                                                                          : motor->i_uvw.u;
+    motor->i_uvw.u = (motor->i_uvw.w > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.w < -CURRENT_LIMIT) ? -CURRENT_LIMIT
+                                                                                                          : motor->i_uvw.w;
     // 3. Clark变换，
     FOC_Clark_Transform(motor);
     // 4. smo观测器推算转子位置，得到电角度和转速
@@ -321,17 +321,35 @@ foc_state_t Foc_Open_Loop_Test(foc_handle_t *motor, float dt)
 {
     // 1. 电流校准（减去零点偏移）
     motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.v) * CURRENT_SCALE;
-    motor->i_uvw.u = -(float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
+    motor->i_uvw.u = (float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
     motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
                                                                                                           : motor->i_uvw.v;
-    motor->i_uvw.u = (motor->i_uvw.u > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.u < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-                                                                                                          : motor->i_uvw.u;
+    motor->i_uvw.u = (motor->i_uvw.w > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.w < -CURRENT_LIMIT) ? -CURRENT_LIMIT
+                                                                                                          : motor->i_uvw.w;
     // 3. Clark变换，
     FOC_Clark_Transform(motor);
     // 4. smo观测器推算转子位置，得到电角度和转速
     SMO_Observer(motor, dt, MOTOR_STATE_OPEN);
-    FOC_Park_Transform(motor);
+
+    // 固定角度为0，不依赖观测器
+    float control_theta = 0.0f;
+    float cos_th = cosf(control_theta);
+    float sin_th = sinf(control_theta);
+
+    // Park变换
+    motor->i_dq.d = motor->i_ab.alpha * cos_th + motor->i_ab.beta * sin_th;
+    motor->i_dq.q = -motor->i_ab.alpha * sin_th + motor->i_ab.beta * cos_th;
+
+    // 阶跃信号
+    vofa_cnt++;
+    if(vofa_cnt < 8500)
+        motor->pi_q.target = 2.0f;
+    else if(vofa_cnt < 17000)
+        motor->pi_q.target = 4.0f;
+    else
+        vofa_cnt = 0;
+    motor->pi_d.target = 0.0f;
 
     motor->pi_d.feedback = motor->i_dq.d;
     motor->pi_q.feedback = motor->i_dq.q;
@@ -343,17 +361,7 @@ foc_state_t Foc_Open_Loop_Test(foc_handle_t *motor, float dt)
     motor->u_dq.d = motor->pi_d.output;
     motor->u_dq.q = motor->pi_q.output;
 
-    motor->u_dq.d = 0.0f;             // 通常d轴电流设为0以获得最大转矩效率
-    motor->u_dq.q = PWM_VBUS * 0.45f; // q轴电压与期望转矩相关, 电压范围为母线电压的30%~50%
-
-    if(motor->target_speed > 0)
-        motor->theta += OPEN_ELEC_SPEED * dt;     // 电角度递增
-    else if (motor->target_speed < 0)
-        motor->theta -= OPEN_ELEC_SPEED * dt;
-
-    motor->theta = fmod(motor->theta, _2_PI); // 限制在0~2π范围内，保持归一化
-    if (motor->theta < 0)
-        motor->theta += _2_PI; // 处理负数情况
+    motor->theta = 0;
 
     // 3. 反Park变换
     FOC_InvPark_Transform(motor);
@@ -394,7 +402,7 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     // 4. MRAS观测器推算转子位置，得到电角度和转速
     SMO_Observer(motor, dt, MOTOR_STATE_CLOSE);
 
-    float control_theta = motor->theta + COMP;
+    float control_theta = motor->theta;
     control_theta = fmodf(control_theta, _2_PI);
     if (control_theta < 0)
         control_theta += _2_PI;
@@ -407,6 +415,8 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     motor->i_dq.q = -motor->i_ab.alpha * sin_th + motor->i_ab.beta * cos_th;
 
     // 6. 速度环PI调节
+    #ifdef FOC_SPEED_CONTROL
+
     motor->PI_Speed_cnt++;
     if (motor->PI_Speed_cnt >= 10)
     {
@@ -441,17 +451,22 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     }
     motor->pi_d.target = 0.0f; // id始终为0
 
-    // motor->theta = 0;
-    // vofa_cnt++;
-    // if(vofa_cnt >= 17000 && vofa_cnt < 34000)
-    // {
-    //     motor->pi_q.target = 4.0f; // 速度环输出→iq目标
-    // }
-    // else if(vofa_cnt > 0 && vofa_cnt < 17000) 
-    //     motor->pi_q.target = 2.0f; // 速度环输出→iq目标
-    // else 
-    //     vofa_cnt = 0;
-    // motor->pi_d.target = 0.0f;                   // id始终为0
+    #endif
+
+    #ifdef FOC_CLOSE_IDEBUG
+
+    vofa_cnt++;
+    if(vofa_cnt >= 17000 && vofa_cnt < 34000)
+    {
+        motor->pi_q.target = 4.0f; // 速度环输出→iq目标
+    }
+    else if(vofa_cnt > 0 && vofa_cnt < 17000) 
+        motor->pi_q.target = 2.0f; // 速度环输出→iq目标
+    else 
+        vofa_cnt = 0;
+    motor->pi_d.target = 0.0f;                   // id始终为0
+    
+    #endif
 
     // 6. 电流环PI调节
     motor->pi_d.feedback = motor->i_dq.d;

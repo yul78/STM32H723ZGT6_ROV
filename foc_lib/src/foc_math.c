@@ -1,9 +1,9 @@
 /**
  * @file foc_math.c
  * @author MING
- * @brief foc有关计算函数
- * @version 0.1
- * @date 2026-04-04
+ * @brief foc有关计算函数，最新版本完善了动态相位补偿
+ * @version 0.2
+ * @date 2026-05-03
  * 
  * @copyright Copyright (c) 2026
  * 
@@ -63,13 +63,15 @@ float calc_compensation_angle(float omega_e_est)
     float fe = fabsf(omega_e_est) / _2_PI;
     
     // LPF截止频率
-    float fc = BEMF_LPF / (_2_PI * TS * (1.0f - BEMF_LPF));
+    float speed_rpm = fe * 60.0f / POLE_PAIRS;
+    float actual_lfp = FOC_calc_dynamic_lpf(speed_rpm);
+    float fc = actual_lfp / (_2_PI * TS * (1.0f - actual_lfp));
     
     // LPF相位延迟（主要部分）
     float comp = atanf(fe / fc);
     
     // 加上数字延迟（可选，通常较小）
-    comp += 1.5f * _2_PI * fe * TS;
+    comp += 1.5f * _2_PI * fe * TS; // 1.5是指1.5个周期的延迟
     
     // 方向：正转加，反转减
     if (omega_e_est < 0) comp = -comp;

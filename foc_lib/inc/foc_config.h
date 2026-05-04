@@ -12,7 +12,8 @@ extern "C" {
 #define PWM_SCALE               3.3f            // ADC参考电压
 #define PWM_VBUS                12.0f           // VBUS母线电压
 #define ADC_RESOLUTION          65535.0f        // 16位ADC分辨率
-#define TS                      0.0001176f     // 采样时间间隔
+// #define TS                      0.0001176f     // 采样时间间隔
+#define TS                      0.00008f     // 采样时间间隔
 
 // INA240参数   
 #define INA240_GAIN             50.0f           // INA240A2增益50V/V
@@ -40,12 +41,16 @@ extern "C" {
 #define BTN7960_DEAD_TIME_S     0.0000005f 
 
 // 电流环参数
-#define PI_KP_D                 0.56418f 
-#define PI_KI_D                 1396.511f   
-#define PI_KP_Q                 0.56418f 
-#define PI_KI_Q                 1396.511f
-#define PI_KP_SPEED             0.0015f         // 速度PI比例系数
-#define PI_KI_SPEED             0.002f          // 速度PI积分系数
+// #define PI_KP_D                 0.56418f 
+// #define PI_KI_D                 1396.511f   
+// #define PI_KP_Q                 0.56418f 
+// #define PI_KI_Q                 1396.511f
+#define PI_KP_D                 0.11224f 
+#define PI_KI_D                 277.827f   
+#define PI_KP_Q                 0.11224f 
+#define PI_KI_Q                 277.827f
+#define PI_KP_SPEED             0.03f         // 速度PI比例系数
+#define PI_KI_SPEED             1.0f          // 速度PI积分系数
 #define PI_LIMIT_SPEED          15.0f           // 速度PI输出限幅
 
 // 速度定义（分离开环和闭环）

@@ -131,7 +131,7 @@ static void foc_hal_adc_get_value(uint8_t num, uint16_t *adc_u, uint16_t *adc_v,
             *adc_w = adc1_buf[0];
             break;
         case 2:
-            SCB_InvalidateDCache_by_Addr((uint32_t*)adc1_buf, sizeof(adc1_buf));
+            SCB_InvalidateDCache_by_Addr((uint32_t*)adc2_buf, sizeof(adc2_buf));
             *adc_u = adc2_buf[1];
             *adc_v = 0;
             *adc_w = adc2_buf[0];

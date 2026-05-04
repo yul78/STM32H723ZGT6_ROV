@@ -13,6 +13,8 @@ extern "C"{
 #endif
 
 // #define ONLY_OPEN_LOOP
+#define FOC_SPEED_CONTROL
+// #define FOC_CLOSE_IDEBUG
 
 extern foc_handle_t FOC_Motor[MAX_MOTOR_NUM + 1];
 

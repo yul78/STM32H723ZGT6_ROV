@@ -145,6 +145,7 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     float sign = motor->speed_sign;
     float theta_new = atan2f(-sign * motor->e_ab.alpha, sign * motor->e_ab.beta)
                     + calc_compensation_angle(motor->speed_observer);
+                    
     theta_new = fmodf(theta_new, _2_PI);
     if(theta_new < 0) theta_new += _2_PI;
 

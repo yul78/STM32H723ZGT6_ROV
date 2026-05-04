@@ -69,8 +69,8 @@ void Print1_Motor_To_VOFA(float data, uint8_t length)
 {
     char uart_buf[20];
     sprintf(uart_buf, "%.6f\n", data);
-    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, length, 100);
-    HAL_UART_Transmit(&huart10, (uint8_t *)"\n", 1, 100);
+    HAL_UART_Transmit(&huart6, (uint8_t *)uart_buf, length, 100);
+    HAL_UART_Transmit(&huart6, (uint8_t *)"\n", 1, 100);
 }
 
 void Print2_Motor_To_VOFA(float data1, float data2)
@@ -81,7 +81,7 @@ void Print2_Motor_To_VOFA(float data1, float data2)
     int len = sprintf(uart_buf, "%.3f,%.3f\n", data1, data2);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart6, (uint8_t *)uart_buf, len, 10);
 }
 
 void Print3_Motor_To_VOFA(float data1, float data2, float data3)
@@ -91,7 +91,7 @@ void Print3_Motor_To_VOFA(float data1, float data2, float data3)
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f\n", data1, data2, data3);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart6, (uint8_t *)uart_buf, len, 10);
 }
 
 void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
@@ -101,7 +101,7 @@ void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f\n", data1, data2, data3, data4);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart6, (uint8_t *)uart_buf, len, 10);
 }
 /* USER CODE END 0 */
 
@@ -148,9 +148,6 @@ int main(void)
   MX_TIM8_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-
-  HAL_UART_MspInit(&huart10);
-
   
   Foc_Init(1, &foc_hal); // 左边电机
   Foc_Init(2, &foc_hal); // 右边电机
@@ -170,10 +167,12 @@ int main(void)
     // Print2_Motor_To_VOFA(FOC_Motor[2].e_ab.alpha, FOC_Motor[2].e_ab.beta);
     // Print3_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed_observer);
 
-    // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].pi_q.target);
+    Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].pi_q.output);
     // Print3_Motor_To_VOFA(FOC_Motor[2].theta_Observer, FOC_Motor[2].theta, FOC_Motor[2].pi_q.target);
-    Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.output);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.output);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].i_adc_u, FOC_Motor[2].i_uvw.u, FOC_Motor[2].pi_q.target);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_ab_hat.alpha, FOC_Motor[2].i_ab_hat.beta, angle_error);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].i_dq.q, FOC_Motor[2].speed);
     // Print4_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed, angle_error);
     // Print4_Motor_To_VOFA(
     //     FOC_Motor[2].i_dq.d,          // 期望≈0
@@ -188,7 +187,7 @@ int main(void)
     //     FOC_Motor[2].i_dq.d              // Id（应接近0）
     // );
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].i_dq.d);
-    Foc_Set_Speed(2, -3000);
+    Foc_Set_Speed(2, 2000);
     // Foc_Set_Speed(1, 50);
     // Print2_Motor_To_VOFA((float)adc2_buf[0], (float)adc1_buf[1]);
     // 速度环调试需要看4个量

@@ -2,7 +2,7 @@ version: "4.1"
 name: Brushless_Motor_Drive
 type: ARM
 deviceName: null
-packDir: null
+packDir: .pack/Keil/STM32H7xx_DFP.4.1.0
 srcDirs:
   - ../foc_lib
 virtualFolder:
@@ -223,7 +223,7 @@ targets:
       OpenOCD:
         baseAddr: "0x08000000"
         bin: ""
-        interface: cmsis-dap-v1
+        interface: cmsis-dap
         target: stm32h7x
       STLink:
         address: "0x8000000"
