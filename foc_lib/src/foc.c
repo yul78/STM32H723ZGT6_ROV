@@ -121,7 +121,7 @@ foc_state_t Foc_Loop(uint8_t motor_num)
     foc_handle_t *motor = &FOC_Motor[motor_num];
 
     if (motor->init_done != 1)
-        return FOC_ERR_LOOP; // 初始化未完成，直接返回
+        return FOC_ERR_NOT_INIT; // 初始化未完成，直接返回
 
     motor->hal.adc_get_value(motor_num, &motor->i_adc_u, &motor->i_adc_v, &motor->i_adc_w);
 
@@ -199,26 +199,28 @@ foc_state_t Foc_Loop(uint8_t motor_num)
         // 观测速度与开环速度接近才切换
         float speed_rpm = motor->speed_observer * 60.0f / _2_PI_POLE_PAIRS; // 把电角速度转换为圈每秒
         float speed_diff = fabsf(fabsf(speed_rpm) - fabsf(OPEN_LOOP_SPEED_RPM));
-        if (motor->state_timer > 8500 && speed_diff < OPEN_LOOP_SPEED_RPM * 0.1f)
+        if (motor->state_timer > 8500 && speed_diff < OPEN_LOOP_SPEED_RPM * 0.1f && fabs(angle_error) < 0.1f)
         {
+            motor->pi_pll.integral = motor->target_speed > 0 ? fabsf(motor->speed_observer) : -fabsf(motor->speed_observer);
             motor->pi_d.integral = 0.0f;
             motor->pi_d.output = 0.0f;
 
             motor->pi_speed.integral = 0.0f; // 初始驱动力
             motor->pi_speed.output = 6.7f;
 
-            motor->pi_q.integral = 0.0f;
+            motor->pi_q.integral = PWM_VBUS * 0.2f; // 给个初始积分，约2.4V
             motor->pi_q.output = PWM_VBUS * 0.25f;
 
             if(motor->target_speed > 0)
             {
-                motor->speed_ramp_target = motor->speed + 100;
-                motor->pi_pll.integral = OPEN_ELEC_SPEED;
+                motor->speed_ramp_target = fabsf(motor->speed_observer) * 60.0f / (_2_PI * POLE_PAIRS) + 50.0f;
+                // motor->pi_pll.integral = OPEN_ELEC_SPEED;
             } 
             else
             {
-                motor->speed_ramp_target = motor->speed - 100;
-                motor->pi_pll.integral = -OPEN_ELEC_SPEED;
+                motor->speed_ramp_target = fabsf(motor->speed_observer) * 60.0f / (_2_PI * POLE_PAIRS) + 50.0f;
+                motor->speed_ramp_target = -motor->speed_ramp_target;
+                // motor->pi_pll.integral = -OPEN_ELEC_SPEED;
             }
                 
             motor->theta_Observer = motor->theta;
@@ -277,14 +279,34 @@ foc_state_t Foc_Loop(uint8_t motor_num)
  */
 foc_state_t Foc_Open_Loop(foc_handle_t *motor, float dt)
 {
+    foc_state_t foc_state = FOC_OK;
     // 1. 电流校准（减去零点偏移）
-    motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.v) * CURRENT_SCALE;
+    motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.u) * CURRENT_SCALE;
     motor->i_uvw.u = (float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
-    motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-                                                                                                          : motor->i_uvw.v;
-    motor->i_uvw.u = (motor->i_uvw.w > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.w < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-                                                                                                          : motor->i_uvw.w;
+    // motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
+    //                                                                                                       : motor->i_uvw.v;
+    // motor->i_uvw.u = (motor->i_uvw.u > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.u < -CURRENT_LIMIT) ? -CURRENT_LIMIT
+    //                                                                                                       : motor->i_uvw.u;
+
+    if(fabs(motor->i_uvw.v) >= CURRENT_LIMIT)
+    {
+        motor->i_uvw.v = motor->i_uvw.v > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
+        foc_state = FOC_ERR_OVERCURRENT;
+    }
+
+    if(fabs(motor->i_uvw.u) >= CURRENT_LIMIT)
+    {
+        motor->i_uvw.u = motor->i_uvw.u > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
+        foc_state = FOC_ERR_OVERCURRENT;
+    }
+
+    if(fabs(motor->i_uvw.v) >= CURRENT_LIMIT)
+    {
+        motor->i_uvw.v = motor->i_uvw.v > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
+        foc_state = FOC_ERR_OVERCURRENT;
+    }
+
     // 3. Clark变换，
     FOC_Clark_Transform(motor);
     // 4. smo观测器推算转子位置，得到电角度和转速
@@ -307,7 +329,7 @@ foc_state_t Foc_Open_Loop(foc_handle_t *motor, float dt)
     FOC_InvPark_Transform(motor);
     // 4. SVPWM生成并输出
     FOC_SVPWM_Generate(motor);
-    return FOC_OK;
+    return foc_state;
 }
 
 /**
@@ -320,13 +342,13 @@ foc_state_t Foc_Open_Loop(foc_handle_t *motor, float dt)
 foc_state_t Foc_Open_Loop_Test(foc_handle_t *motor, float dt)
 {
     // 1. 电流校准（减去零点偏移）
-    motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.v) * CURRENT_SCALE;
+    motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.u) * CURRENT_SCALE;
     motor->i_uvw.u = (float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
     motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
                                                                                                           : motor->i_uvw.v;
-    motor->i_uvw.u = (motor->i_uvw.w > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.w < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-                                                                                                          : motor->i_uvw.w;
+    motor->i_uvw.u = (motor->i_uvw.u > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.u < -CURRENT_LIMIT) ? -CURRENT_LIMIT
+                                                                                                          : motor->i_uvw.u;
     // 3. Clark变换，
     FOC_Clark_Transform(motor);
     // 4. smo观测器推算转子位置，得到电角度和转速
@@ -379,24 +401,52 @@ foc_state_t Foc_Open_Loop_Test(foc_handle_t *motor, float dt)
  */
 foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 {
+    foc_state_t foc_state = FOC_OK;
     // pi输出限幅缓启动
     float pi_limit;
-    if(motor->close_cnt < 2000)
+    if(motor->close_cnt < 500)           // 缩短到500拍（0.04秒）
     {
         motor->close_cnt++;
-        pi_limit = 0.5f + motor->close_cnt * 0.00275f;
+        pi_limit = 3.0f + motor->close_cnt * 0.007f;  // 3V→6.5V，0.04秒到位
     }
     else
         pi_limit = PI_LIMIT;
 
+    // motor->close_cnt++;
+
+    // float blend = motor->close_cnt / 1000.0f;
+
+    // if(blend > 1.0f) blend = 1.0f;
+
+    // motor->theta = (1.0f - blend) * motor->theta + blend * motor->theta_Observer;
+
     // 1. 电流校准（减去零点偏移）
-    motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.v) * CURRENT_SCALE;
+    motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.u) * CURRENT_SCALE;
     motor->i_uvw.u = (float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
-    motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-                                                                                                          : motor->i_uvw.v;
-    motor->i_uvw.u = (motor->i_uvw.u > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.u < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-                                                                                                          : motor->i_uvw.u;
+    // motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
+    //                                                                                                       : motor->i_uvw.v;
+    // motor->i_uvw.u = (motor->i_uvw.u > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.u < -CURRENT_LIMIT) ? -CURRENT_LIMIT
+    //                                                                                                       : motor->i_uvw.u;
+
+    if(fabs(motor->i_uvw.v) >= CURRENT_LIMIT)
+    {
+        motor->i_uvw.v = motor->i_uvw.v > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
+        foc_state = FOC_ERR_OVERCURRENT;
+    }
+
+    if(fabs(motor->i_uvw.u) >= CURRENT_LIMIT)
+    {
+        motor->i_uvw.u = motor->i_uvw.u > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
+        foc_state = FOC_ERR_OVERCURRENT;
+    }
+
+    if(fabs(motor->i_uvw.v) >= CURRENT_LIMIT)
+    {
+        motor->i_uvw.v = motor->i_uvw.v > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
+        foc_state = FOC_ERR_OVERCURRENT;
+    }
+
     // 3. Clark变换，
     FOC_Clark_Transform(motor);
     // 4. MRAS观测器推算转子位置，得到电角度和转速
@@ -416,7 +466,7 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 
     // 6. 速度环PI调节
     #ifdef FOC_SPEED_CONTROL
-
+    
     motor->PI_Speed_cnt++;
     if (motor->PI_Speed_cnt >= 10)
     {
@@ -453,8 +503,7 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 
     #endif
 
-    #ifdef FOC_CLOSE_IDEBUG
-
+    #ifdef FOC_CLOSE_I_DEBUG
     vofa_cnt++;
     if(vofa_cnt >= 17000 && vofa_cnt < 34000)
     {
@@ -465,7 +514,6 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     else 
         vofa_cnt = 0;
     motor->pi_d.target = 0.0f;                   // id始终为0
-    
     #endif
 
     // 6. 电流环PI调节
@@ -497,7 +545,7 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 
     // 8. SVPWM生成并输出
     FOC_SVPWM_Generate(motor);
-    return FOC_OK;
+    return foc_state;
 }
 
 /**

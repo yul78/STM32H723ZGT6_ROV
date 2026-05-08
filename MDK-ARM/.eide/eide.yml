@@ -91,6 +91,7 @@ targets:
         - USE_HAL_DRIVER
         - STM32H723xx
       incList:
+        - .
         - ../Core/Inc
         - ../Drivers/STM32H7xx_HAL_Driver/Inc
         - ../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
@@ -223,7 +224,7 @@ targets:
       OpenOCD:
         baseAddr: "0x08000000"
         bin: ""
-        interface: cmsis-dap
+        interface: cmsis-dap-v1
         target: stm32h7x
       STLink:
         address: "0x8000000"

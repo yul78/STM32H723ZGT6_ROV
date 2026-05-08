@@ -30,15 +30,15 @@ typedef enum {
 
 typedef enum
 {
-    FOC_OK = 0,
-    FOC_ERR_LOOP,
-    FOC_ERR_NOT_INIT,
-    FOC_ERR_OVERCURRENT,
-    FOC_ERR_OVERVOLTAGE,
-    FOC_ERR_UNDERVOLTAGE,
-    FOC_ERR_ENCODER,
-    FOC_ERR_HAL_NULL,
-    FOC_ERR_INVALID_PARAM,
+    FOC_OK = 0,                 // 正常
+    FOC_ERR_LOOP,               // 循环中断
+    FOC_ERR_NOT_INIT,           // 尚未初始化
+    FOC_ERR_OVERCURRENT,        // 过流
+    FOC_ERR_OVERVOLTAGE,        // 过压
+    FOC_ERR_UNDERVOLTAGE,       // 过压
+    FOC_ERR_ENCODER,            // 编码器错误
+    FOC_ERR_HAL_NULL,           // HAL模块为空
+    FOC_ERR_INVALID_PARAM,      // 无效参数
 }foc_state_t;
 
 typedef struct

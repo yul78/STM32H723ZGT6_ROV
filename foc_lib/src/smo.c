@@ -113,15 +113,27 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
                        + b * (motor->u_ab.beta  - z_beta);
     
     // ===== 第4步：BEMF = 切换项的低通滤波 =====
+    #ifdef FOC_PLL_ENABLE
     float speed_rpm = fabsf(motor->speed_observer) * 60.0f / _2_PI_POLE_PAIRS;
+    #else
+    float speed_rpm = fabsf(motor->speed) * 60.0f / _2_PI_POLE_PAIRS;
+    #endif // FOC_PLL_ENABLE
+    
     motor->e_ab.alpha += (z_alpha - motor->e_ab.alpha) * FOC_calc_dynamic_lpf(speed_rpm);
     motor->e_ab.beta  += (z_beta  - motor->e_ab.beta)  * FOC_calc_dynamic_lpf(speed_rpm);
 
-    // ===== 第5步：PLL（与你原来的一样）=====
-    float cos_obs = cosf(motor->theta_Observer);
-    float sin_obs = sinf(motor->theta_Observer);
-    angle_error = -motor->e_ab.alpha * cos_obs 
-                       - motor->e_ab.beta  * sin_obs;
+    // ===== 第5步：PLL=====
+    #ifdef FOC_PLL_ENABLE
+
+    float theta_comp = motor->theta_Observer - calc_compensation_angle(motor->speed_observer);
+    // float theta_comp = motor->theta_Observer;
+
+    float cos_obs = cosf(theta_comp);
+    float sin_obs = sinf(theta_comp);
+
+    float speed_sign = (motor->speed_observer >= 0.0f) ? 1.0f : -1.0f;
+    angle_error = -motor->e_ab.alpha * cos_obs - motor->e_ab.beta  * sin_obs;
+    angle_error *= speed_sign;
     
     // 归一化：消除转速对增益的影响
     float e_amp = sqrtf(motor->e_ab.alpha * motor->e_ab.alpha 
@@ -137,37 +149,62 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
         angle_error = 0.0f;
     }
     
-    // Step7：根据转速方向选择正确的atan2公式
-    float hyst = OPEN_LOOP_SPEED_RPM * 0.2f;
-    if(motor->speed_observer > hyst) motor->speed_sign = 1.0f;
-    else if(motor->speed_observer < -hyst) motor->speed_sign = -1.0f;
-
-    float sign = motor->speed_sign;
-    float theta_new = atan2f(-sign * motor->e_ab.alpha, sign * motor->e_ab.beta)
-                    + calc_compensation_angle(motor->speed_observer);
-                    
-    theta_new = fmodf(theta_new, _2_PI);
-    if(theta_new < 0) theta_new += _2_PI;
-
-    // Step8：用新旧角度微分估速（顺序修正）
-    float dtheta = theta_new - motor->theta_Observer; // 新-旧，顺序正确
-    if (dtheta >  PI) dtheta -= _2_PI;
-    if (dtheta < -PI) dtheta += _2_PI;
-
-    float speed_from_diff = dtheta / dt;
-
-    // 对角速度进行低通滤波
-    motor->speed_observer += (speed_from_diff - motor->speed_observer) * 0.01f;
-
-    // 角速度限幅
+    // pll锁相环
+    motor->pi_pll.integral += angle_error * PLL_KI * dt;
+    
+    // 积分限幅
+    if(motor->pi_pll.integral >  OB_SPEED_LIMIT) motor->pi_pll.integral =  OB_SPEED_LIMIT;
+    if(motor->pi_pll.integral < -OB_SPEED_LIMIT) motor->pi_pll.integral = -OB_SPEED_LIMIT;
+    
+    // 速度低通滤波
+    float speed_raw = PLL_KP * angle_error + motor->pi_pll.integral;
+    motor->speed_observer += (speed_raw - motor->speed_observer) * SPEED_OBSERBER_LPF;
+    
+    // 观测器估测速度限幅
     if(motor->speed_observer >  OB_SPEED_LIMIT) motor->speed_observer =  OB_SPEED_LIMIT;
     if(motor->speed_observer < -OB_SPEED_LIMIT) motor->speed_observer = -OB_SPEED_LIMIT;
-
-    motor->theta_Observer = theta_new; // 更新角度
-
+    
+    motor->theta_Observer += motor->speed_observer * dt;
+    motor->theta_Observer = fmodf(motor->theta_Observer, _2_PI);
+    if(motor->theta_Observer < 0) motor->theta_Observer += _2_PI;
+    
     if(mode == MOTOR_STATE_CLOSE)
         motor->theta = motor->theta_Observer;
-
+    
     motor->speed = motor->speed_observer * 60.0f / _2_PI_POLE_PAIRS;
+
+    #endif // FOC_PLL_ENABLE
+
+    // // Step7：根据转速方向选择正确的atan2公式
+    // float hyst = OPEN_LOOP_SPEED_RPM * 0.2f;
+    // if(motor->speed_observer > hyst) motor->speed_sign = 1.0f;
+    // else if(motor->speed_observer < -hyst) motor->speed_sign = -1.0f;
+
+    // float sign = motor->speed_sign;
+    // float theta_new = atan2f(-sign * motor->e_ab.alpha, sign * motor->e_ab.beta)
+    //                 + calc_compensation_angle(motor->speed_observer);
+    // theta_new = fmodf(theta_new, _2_PI);
+    // if(theta_new < 0) theta_new += _2_PI;
+
+    // // Step8：用新旧角度微分估速（顺序修正）
+    // float dtheta = theta_new - motor->theta_Observer; // 新-旧，顺序正确
+    // if (dtheta >  PI) dtheta -= _2_PI;
+    // if (dtheta < -PI) dtheta += _2_PI;
+
+    // float speed_from_diff = dtheta / dt;
+
+    // // 对角速度进行低通滤波
+    // motor->speed_observer += (speed_from_diff - motor->speed_observer) * SPEED_OBSERBER_LPF;
+
+    // // 角速度限幅
+    // if(motor->speed_observer >  OB_SPEED_LIMIT) motor->speed_observer =  OB_SPEED_LIMIT;
+    // if(motor->speed_observer < -OB_SPEED_LIMIT) motor->speed_observer = -OB_SPEED_LIMIT;
+
+    // motor->theta_Observer = theta_new; // 更新角度
+
+    // if(mode == MOTOR_STATE_CLOSE)
+    //     motor->theta = motor->theta_Observer;
+
+    // motor->speed = motor->speed_observer * 60.0f / _2_PI_POLE_PAIRS;
 }
 
