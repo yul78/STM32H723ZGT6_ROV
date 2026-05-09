@@ -27,7 +27,7 @@ extern "C" {
 #define SAMPLE_RESISTOR         0.00148f        // 采样电阻A1mΩ
 
 // 观测器参数   
-#define SMO_K                   12.0f            // 滑模增益 (根据实际效果调试)
+#define SMO_K                   4.0f            // 滑模增益 (根据实际效果调试)
 #define BEMF_LPF                0.1f           // 反电动势低通滤波系数
 #define SPEED_OBSERBER_LPF      0.1f           // 观测器求得的速度的低通滤波系数
 #define COMP                    0.0f            // 偏移量
@@ -43,8 +43,8 @@ extern "C" {
 #define MAX_MOTOR_NUM           2               // 最大电机数量
 
 // PLL参数
-#define PLL_KP                  600.0f      
-#define PLL_KI                  40000.0f    
+#define PLL_KP                  170.0f      
+#define PLL_KI                  5000.0f    
 #define BTN7960_DEAD_TIME_S     0.0000005f 
 
 // 电流环参数
@@ -67,7 +67,7 @@ extern "C" {
 // 速度定义（分离开环和闭环）
 // #define TARGET_SPEED            2000.0f         // 闭环最终目标(RPM)
 #define OPEN_LOOP_SPEED_RPM     300.0f          // 开环启动速度(RPM)，必须是电机能跟上的
-#define SPEED_RAMP_RATE         1500.0f          // 闭环加速斜率(RPM/s)
+#define SPEED_RAMP_RATE         1000.0f          // 闭环加速斜率(RPM/s)
 #define SPEED_START_THRESHOLD   50.0f   // RPM，低于此值视为停机指令
 
 #ifdef __cplusplus

@@ -164,13 +164,17 @@ int main(void)
   {
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_uvw.u, FOC_Motor[2].i_uvw.v, FOC_Motor[2].i_uvw.w);
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab.beta);
+    // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab_hat.alpha);
     // Print2_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].u_dq.d);
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].i_dq.d);
     // Print2_Motor_To_VOFA(FOC_Motor[2].e_ab.alpha, FOC_Motor[2].e_ab.beta);
-    Print3_Motor_To_VOFA(FOC_Motor[2].e_ab.alpha, FOC_Motor[2].e_ab.beta, sqrt(FOC_Motor[2].e_ab.alpha * FOC_Motor[2].e_ab.alpha + FOC_Motor[2].e_ab.beta * FOC_Motor[2].e_ab.beta));
+    // Print3_Motor_To_VOFA(FOC_Motor[2].e_ab.alpha, FOC_Motor[2].e_ab.beta, sqrt(FOC_Motor[2].e_ab.alpha * FOC_Motor[2].e_ab.alpha + FOC_Motor[2].e_ab.beta * FOC_Motor[2].e_ab.beta));
     // Print3_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, angle_error);
+    // Print4_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed_observer, angle_error);
+    // Print4_Motor_To_VOFA(FOC_Motor[2].i_dq.d, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.output, FOC_Motor[2].speed);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_observer, angle_error);
 
-    // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].pi_q.output);
+    Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].pi_q.output);
     // Print3_Motor_To_VOFA(FOC_Motor[2].theta_Observer, FOC_Motor[2].theta, FOC_Motor[2].pi_q.target);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.output);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_adc_u, FOC_Motor[2].i_uvw.u, FOC_Motor[2].pi_q.target);
@@ -179,7 +183,7 @@ int main(void)
     // Print4_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed, angle_error);
     // Print4_Motor_To_VOFA(
     //     FOC_Motor[2].i_dq.d,          // 期望≈0
-    //     FOC_Motor[2].i_dq.q,          // 期望≈正值稳定
+    //     FOC_Motor[2].i_dq.q,          // 期望≈正7值稳定
     //     FOC_Motor[2].speed,            // 期望≈target_speed
     //     FOC_Motor[2].theta_Observer    // 观察是否平滑
     // );
@@ -195,7 +199,7 @@ int main(void)
     //                  FOC_Motor[2].pi_q.target,     // 速度环输出的 Iq 目标 (A)
     //                  FOC_Motor[2].i_dq.q);         // 实测 q 轴电流 (A)
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].i_dq.d);
-    Foc_Set_Speed(2, -2000);
+    Foc_Set_Speed(2, 1000);
     // Foc_Set_Speed(1, 50);
     // Print2_Motor_To_VOFA((float)adc2_buf[0], (float)adc1_buf[1]);
     // 速度环调试需要看4个量
