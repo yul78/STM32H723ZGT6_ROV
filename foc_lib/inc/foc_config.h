@@ -11,7 +11,8 @@ extern "C" {
 // #define ONLY_OPEN_LOOP
 #define FOC_SPEED_CONTROL
 // #define FOC_CLOSE_I_DEBUG
-#define FOC_PLL_ENABLE
+#define FOC_PLL_ENABLE                      // 使能锁相环
+// #define FW_ENABLE                           // 使能弱磁
 
 
 // PWM参数
@@ -34,6 +35,13 @@ extern "C" {
 #define OB_SPEED_LIMIT          10000.0f         // 观测速度限幅
 #define PLL_INIT_LIMIT          1500.0f         // PLL积分限幅4,673.521850899743
 #define SAT_BOUNDARY            0.8f            // sat函数饱和边界   
+
+// ===== 弱磁控制参数 =====
+#define CURRENT_PI_LIMIT        6.801f      // 电流环电压输出限幅（V），与PI limit一致
+#define FW_VOLTAGE_THRESHOLD    0.92f       // 触发弱磁的电压利用率（建议0.93~0.97）
+#define FW_KI                   1.0f       // 弱磁积分增益（越大响应越快，但可能振荡）
+#define FW_EXIT_RATE            0.3f        // 退出弱磁时id恢复速率倍数（相对FW_KI）
+#define FW_ID_MAX               8.0f        // 最大弱磁电流限幅（A），不超过 CURRENT_LIMIT/2
 
 // 电机通用参数（根据电机修改）
 #define POLE_PAIRS              7.0f            // 电机极对数（示例：7对极）

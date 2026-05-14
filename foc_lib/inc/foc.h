@@ -7,6 +7,7 @@
 #include "foc_config.h"
 #include "foc_utils.h"
 #include "foc_math.h"
+#include "field_weakening.h"
 
 #ifdef __cplusplus
 extern "C"{

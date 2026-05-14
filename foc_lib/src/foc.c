@@ -501,6 +501,8 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     }
     motor->pi_d.target = 0.0f; // id始终为0
 
+    FOC_FieldWeakening(motor, TS);    
+
     #endif
 
     #ifdef FOC_CLOSE_I_DEBUG

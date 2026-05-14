@@ -130,6 +130,9 @@ typedef struct
     float                   speed_observer;     // 观测器得到的电机转速(rpm)
     float                   speed_sign;         // 电机转子正转还是反转
 
+    float   id_fw;                              // 弱磁注入的负 id（弱磁控制器输出，≤0）
+    float   fw_active;                          // 弱磁激活标志（调试用）
+
     /*目标值*/      
     float                   target_iq;          // q轴电流目标值
     float                   target_id;          // d轴电流目标值
