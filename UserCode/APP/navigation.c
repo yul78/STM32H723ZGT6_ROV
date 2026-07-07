@@ -9,6 +9,7 @@
 static NavigationTarget_t navigation_target;
 static uint8_t navigation_enabled;
 static uint8_t navigation_outside;
+static uint8_t navigation_stop_requested;
 
 static pid_control_t navigation_turn_pid = {
     .kp = NAV_TURN_PID_KP,
@@ -39,7 +40,10 @@ static pid_control_t navigation_forward_pid = {
 
 static uint8_t Navigation_TargetIsValid(void)
 {
-    return (navigation_target.valid != 0U) && (navigation_target.target_radius_m > 0.0f);
+    /* Target is valid only if: explicitly marked valid, has positive radius, and center is not obviously unset (0,0). */
+    uint8_t center_is_set = (fabsf(navigation_target.target_center_latitude) > 0.000001f) ||
+                            (fabsf(navigation_target.target_center_longitude) > 0.000001f);
+    return (navigation_target.valid != 0U) && (navigation_target.target_radius_m > 0.0f) && (center_is_set != 0U);
 }
 
 static uint8_t Navigation_GpsIsValid(void)
@@ -162,6 +166,7 @@ void Navigation_Init(void)
     memset(&navigation_target, 0, sizeof(navigation_target));
     navigation_enabled = 0U;
     navigation_outside = 0U;
+    navigation_stop_requested = 0U;
     Navigation_Stop();
 }
 
@@ -189,7 +194,8 @@ void Navigation_Task(void)
     float east_m = 0.0f;
     float distance_m = 0.0f;
 
-    if ((navigation_enabled == 0U) || (Navigation_TargetIsValid() == 0U) || (Navigation_GpsIsValid() == 0U))
+    /* Durable stop: if external caller requested stop, honor it and block restart for this cycle. */
+    if ((navigation_enabled == 0U) || (navigation_stop_requested != 0U) || (Navigation_TargetIsValid() == 0U) || (Navigation_GpsIsValid() == 0U))
     {
         Navigation_Stop();
         return;
@@ -224,6 +230,7 @@ void Navigation_Task(void)
     if (navigation_outside == 0U)
     {
         Navigation_StopMotors();
+        navigation_stop_requested = 0U;
         return;
     }
 
@@ -238,6 +245,9 @@ void Navigation_Task(void)
         FOC_Set_Speed(1U, turn_command);
         FOC_Set_Speed(2U, forward_command);
     }
+
+    /* Clear stop flag after successful motion cycle. */
+    navigation_stop_requested = 0U;
 }
 
 uint8_t Navigation_IsOutside(void)
@@ -247,6 +257,8 @@ uint8_t Navigation_IsOutside(void)
 
 void Navigation_Stop(void)
 {
+    /* Durable stop: set flag to prevent Task() from restarting in next cycle. Clear flag after this cycle completes. */
+    navigation_stop_requested = 1U;
     navigation_outside = 0U;
     Navigation_ResetPid(&navigation_turn_pid);
     Navigation_ResetPid(&navigation_forward_pid);
