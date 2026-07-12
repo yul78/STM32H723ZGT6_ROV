@@ -75,6 +75,8 @@ void Navigation_Task(void)
 {
   /************* JY901S物理数据 *************/
   JY901_Task();
+
+  
 }
 
 /**
@@ -110,23 +112,27 @@ void Buoyancy_Task(void)
  */
 void Communication_Task(void)
 {
-  // 定期打印调试信息
-  char Buffer[128];  // 调试信息缓冲区
-  // gps数据通过串口中断接收并存储在gps_data结构体中，定期打印到调试串口
-  sprintf(Buffer, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
-  Debug_USART_Show(Buffer);
+  // // 定期打印调试信息
+  // char Buffer[128];  // 调试信息缓冲区
+  // // gps数据通过串口中断接收并存储在gps_data结构体中，定期打印到调试串口
+  // sprintf(Buffer, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
+  // Debug_USART_Show(Buffer);
 
-  // 显示剩余堆内存，返回值单位是字节
-  sprintf(Buffer, "Free Heap: %u\r\n", xPortGetFreeHeapSize());
-  Debug_USART_Show(Buffer);
+  // // 显示剩余堆内存，返回值单位是字节
+  // sprintf(Buffer, "Free Heap: %u\r\n", xPortGetFreeHeapSize());
+  // Debug_USART_Show(Buffer);
   
-  // 显示栈剩余空间，返回值代为是字
-  sprintf(Buffer, "FOC stack left: %u\r\n", uxTaskGetStackHighWaterMark(FocTaskHandle));
-  Debug_USART_Show(Buffer);
+  // // 显示栈剩余空间，返回值代为是字
+  // sprintf(Buffer, "FOC stack left: %u\r\n", uxTaskGetStackHighWaterMark(FocTaskHandle));
+  // Debug_USART_Show(Buffer);
 
-  // JY901S数据
-  sprintf(Buffer, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
-  Debug_USART_Show(Buffer);
-  sprintf(Buffer, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
-  Debug_USART_Show(Buffer);
+  // // JY901S数据
+  // sprintf(Buffer, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
+  // Debug_USART_Show(Buffer);
+  // sprintf(Buffer, "pitch:%.2f,roll:%.2f,yaw:%.2f\n", jy901_data.pitch, jy901_data.roll, jy901_data.yaw);
+  // Debug_USART_Show(Buffer);
+
+  char gps_info[128];
+  sprintf(gps_info, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
+  HAL_UART_Transmit(&huart6, (uint8_t *)gps_info, strlen(gps_info), 50);
 }

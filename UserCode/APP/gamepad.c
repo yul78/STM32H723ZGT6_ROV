@@ -143,8 +143,8 @@ void GamepadData_Analysis(GamepadData_t *raw, Analysis_GamepadData_t *data)
     if (lx > -JOY_DEADBAND && lx < JOY_DEADBAND) lx = 0;
     if (ry > -JOY_DEADBAND && ry < JOY_DEADBAND) ry = 0;
 
-    data->leftX  = lx * 3000 / 127;
-    data->rightY = ry * 3000 / 127;
+    data->leftX  = lx * 2000 / 127;
+    data->rightY = ry * 2000 / 127;
     // // rightX leftY 同理处理
     // data->rightX = ((int16_t)raw->rightX - 128) * 3000 / 127;
     // data->leftY  = ((int16_t)raw->leftY  - 128) * 3000 / 127;

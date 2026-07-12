@@ -1,9 +1,9 @@
 /**
  * @file foc_math.c
  * @author MING
- * @brief foc有关计算函数
- * @version 0.1
- * @date 2026-04-04
+ * @brief foc有关计算函数，最新版本完善了动态相位补偿
+ * @version 0.2
+ * @date 2026-05-03
  * 
  * @copyright Copyright (c) 2026
  * 
@@ -36,11 +36,11 @@ float FOC_calc_dynamic_lpf(float speed_rpm)
     float fe = fabsf(speed_rpm) * POLE_PAIRS / 60.0f;
     
     // 目标：截止频率 = 3~5 倍电频率
-    float fc_target = 4.0f * fe;  
+    float fc_target = 2.0f * fe;  
     
     // 限制范围
-    if (fc_target < 100.0f)  fc_target = 100.0f;   // 最低100Hz
-    if (fc_target > 5000.0f) fc_target = 5000.0f;   // 最高2000Hz 
+    if (fc_target < 80.0f)  fc_target = 80.0f;   // 最低100Hz
+    if (fc_target > 800.0f) fc_target = 800.0f;   // 最高2000Hz 
     
     // 反算α。
     // fc = lfp × fs / (2π × (1-lfp))
@@ -63,13 +63,16 @@ float calc_compensation_angle(float omega_e_est)
     float fe = fabsf(omega_e_est) / _2_PI;
     
     // LPF截止频率
-    float fc = BEMF_LPF / (_2_PI * TS * (1.0f - BEMF_LPF));
+    // float fc = BEMF_LPF / (_2_PI * TS * (1.0f - BEMF_LPF));
+    float speed_rpm = fe * 60.0f / POLE_PAIRS;
+    float actual_lfp = FOC_calc_dynamic_lpf(speed_rpm);
+    float fc = actual_lfp / (_2_PI * TS * (1.0f - actual_lfp));
     
     // LPF相位延迟（主要部分）
     float comp = atanf(fe / fc);
     
     // 加上数字延迟（可选，通常较小）
-    comp += 1.5f * _2_PI * fe * TS;
+    // comp += 1.5f * _2_PI * fe * TS; // 1.5是指1.5个周期的延迟
     
     // 方向：正转加，反转减
     if (omega_e_est < 0) comp = -comp;
@@ -98,7 +101,7 @@ void FOC_Motor_Cali_Offset(foc_handle_t *motor)
 
         HAL_Delay(1);
     }
-    motor->i_cali_uvw.v = sum_iu / cali_cnt;
+    motor->i_cali_uvw.u = sum_iu / cali_cnt;
     motor->i_cali_uvw.w = sum_iw / cali_cnt;
 }
 

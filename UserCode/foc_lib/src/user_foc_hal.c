@@ -78,7 +78,7 @@ static void foc_hal_tim_start(uint8_t num)
             HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
             HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
             HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
-            __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, 8080);
+            __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, 5495);
             break;
         case 2:
             HAL_TIM_Base_MspInit(&htim1);
@@ -88,7 +88,7 @@ static void foc_hal_tim_start(uint8_t num)
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 8080);
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 5495);
             break;
     }
 }
@@ -131,7 +131,7 @@ static void foc_hal_adc_get_value(uint8_t num, uint16_t *adc_u, uint16_t *adc_v,
             *adc_w = adc1_buf[0];
             break;
         case 2:
-            SCB_InvalidateDCache_by_Addr((uint32_t*)adc1_buf, sizeof(adc1_buf));
+            SCB_InvalidateDCache_by_Addr((uint32_t*)adc2_buf, sizeof(adc2_buf));
             *adc_u = adc2_buf[1];
             *adc_v = 0;
             *adc_w = adc2_buf[0];

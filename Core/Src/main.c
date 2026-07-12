@@ -132,7 +132,7 @@ int main(void)
   // OLED_Init();
   // MPU6050_Init();
   BSP_JY901_Init();
-  //Water_Tank_Init(); // 初始化排水，会卡死
+  Water_Tank_Init(); // 初始化排水，会卡死
   WaterADC_Init();
   APP_GPS_Init();
   APP_Thrusters_Init(); // 无刷电机初始化
