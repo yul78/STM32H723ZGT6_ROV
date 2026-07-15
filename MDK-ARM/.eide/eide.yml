@@ -1,10 +1,9 @@
 version: "4.1"
-name: Brushless_Motor_Drive
+name: Project
 type: ARM
 deviceName: null
-packDir: .pack/Keil/STM32H7xx_DFP.4.1.0
-srcDirs:
-  - ../foc_lib
+packDir: null
+srcDirs: []
 virtualFolder:
   name: <virtual_root>
   files: []
@@ -23,6 +22,7 @@ virtualFolder:
               files:
                 - path: ../Core/Src/main.c
                 - path: ../Core/Src/gpio.c
+                - path: ../Core/Src/freertos.c
                 - path: ../Core/Src/adc.c
                 - path: ../Core/Src/dma.c
                 - path: ../Core/Src/tim.c
@@ -62,48 +62,118 @@ virtualFolder:
           files:
             - path: ../Core/Src/system_stm32h7xx.c
           folders: []
+    - name: BSP
+      files:
+        - path: ../UserCode/BSP/bsp_comm_wifi.c
+        - path: ../UserCode/BSP/bsp_comm_wifi.h
+        - path: ../UserCode/BSP/bsp_gps.c
+        - path: ../UserCode/BSP/bsp_gps.h
+        - path: ../UserCode/BSP/bsp_delay.c
+        - path: ../UserCode/BSP/bsp_delay.h
+        - path: ../UserCode/BSP/bsp_iic_sw.c
+        - path: ../UserCode/BSP/bsp_iic_sw.h
+        - path: ../UserCode/BSP/bsp_interrupt.c
+        - path: ../UserCode/BSP/bsp_interrupt.h
+        - path: ../UserCode/BSP/bsp_jy901.c
+        - path: ../UserCode/BSP/bsp_jy901.h
+      folders: []
+    - name: MID
+      files:
+        - path: ../UserCode/MID/H_Tmc2209.c
+        - path: ../UserCode/MID/H_Tmc2209.h
+        - path: ../UserCode/MID/JY901.c
+        - path: ../UserCode/MID/JY901.h
+        - path: ../UserCode/MID/math.c
+        - path: ../UserCode/MID/math.h
+        - path: ../UserCode/MID/mid_gps.c
+        - path: ../UserCode/MID/mid_gps.h
+      folders: []
+    - name: APP
+      files:
+        - path: ../UserCode/APP/filter.c
+        - path: ../UserCode/APP/filter.h
+        - path: ../UserCode/APP/WaterADC.c
+        - path: ../UserCode/APP/WaterADC.h
+        - path: ../UserCode/APP/WaterTank.c
+        - path: ../UserCode/APP/WaterTank.h
+        - path: ../UserCode/APP/control.c
+        - path: ../UserCode/APP/control.h
+        - path: ../UserCode/APP/gamepad.c
+        - path: ../UserCode/APP/gamepad.h
+        - path: ../UserCode/APP/app_comm_wifi.c
+        - path: ../UserCode/APP/app_comm_wifi.h
+        - path: ../UserCode/APP/app_gps.c
+        - path: ../UserCode/APP/app_gps.h
+        - path: ../UserCode/APP/app_thrusters.c
+        - path: ../UserCode/APP/app_thrusters.h
+        - path: ../UserCode/APP/PID.c
+        - path: ../UserCode/APP/PID.h
+        - path: ../UserCode/APP/user_task.c
+        - path: ../UserCode/APP/user_task.h
+      folders: []
     - name: foc_lib
       files:
-        - path: ../foc_lib/src/foc.c
-        - path: ../foc_lib/src/foc_math.c
-        - path: ../foc_lib/src/smo.c
-        - path: ../foc_lib/src/user_foc_hal.c
-        - path: ../foc_lib/inc/foc.h
-        - path: ../foc_lib/inc/foc_config.h
-        - path: ../foc_lib/inc/foc_hal.h
-        - path: ../foc_lib/inc/foc_math.h
-        - path: ../foc_lib/inc/foc_types.h
-        - path: ../foc_lib/inc/foc_utils.h
-        - path: ../foc_lib/inc/smo.h
+        - path: ../UserCode/foc_lib/src/foc.c
+        - path: ../UserCode/foc_lib/src/foc_math.c
+        - path: ../UserCode/foc_lib/src/smo.c
+        - path: ../UserCode/foc_lib/src/user_foc_hal.c
+        - path: ../UserCode/foc_lib/inc/foc.h
+        - path: ../UserCode/foc_lib/inc/foc_config.h
+        - path: ../UserCode/foc_lib/inc/foc_hal.h
+        - path: ../UserCode/foc_lib/inc/foc_math.h
+        - path: ../UserCode/foc_lib/inc/foc_types.h
+        - path: ../UserCode/foc_lib/inc/foc_utils.h
+        - path: ../UserCode/foc_lib/inc/smo.h
       folders: []
+    - name: Middlewares
+      files: []
+      folders:
+        - name: FreeRTOS
+          files:
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/portable/Common/mpu_wrappers_v2.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/croutine.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/event_groups.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/list.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/queue.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/tasks.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/timers.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/port.c
+          folders: []
     - name: ::CMSIS
       files: []
       folders: []
 dependenceList: []
 outDir: build
 miscInfo:
-  uid: 78d8560a486c2aff362a3a9cecb1a3bf
+  uid: 34c28b789e88685cedf5e01b1f79506e
 targets:
-  Brushless_Motor_Drive:
+  Project:
     cppPreprocessAttrs:
       defineList:
         - USE_PWR_LDO_SUPPLY
         - USE_HAL_DRIVER
         - STM32H723xx
       incList:
-        - .
         - ../Core/Inc
         - ../Drivers/STM32H7xx_HAL_Driver/Inc
         - ../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
         - ../Drivers/CMSIS/Device/ST/STM32H7xx/Include
         - ../Drivers/CMSIS/Include
-        - ../foc_lib/inc
-        - ../foc_lib/src
+        - ../UserCode/APP
+        - ../UserCode/BSP
+        - ../UserCode/MID
+        - ../UserCode/foc_lib/inc
+        - ../Middlewares/Third_Party/FreeRTOS/Source/include
+        - ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
+        - ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F
+        - ../Drivers/CMSIS/RTOS2/Include
         - .cmsis/include
-        - RTE/_Brushless_Motor_Drive
+        - RTE/_Project
       libList: []
-    excludeList:
-      - <virtual_root>/foc_lib
+    excludeList: []
     settings:
       debugger: cortex-debug
     toolchain: AC5
@@ -122,7 +192,6 @@ targets:
             CXX_FLAGS: --diag_suppress=1 --diag_suppress=1295
             C_FLAGS: --diag_suppress=1 --diag_suppress=1295
             c99-mode: true
-            gnu-extensions: true
             one-elf-section-per-function: true
             optimization: level-3
             warnings: all-warnings
@@ -224,16 +293,16 @@ targets:
       OpenOCD:
         baseAddr: "0x08000000"
         bin: ""
-        interface: cmsis-dap-v1
+        interface: cmsis-dap
         target: stm32h7x
       STLink:
         address: "0x8000000"
         bin: ""
         elFile: None
-        optionBytes: .eide/brushless_motor_drive.st.option.bytes.ini
+        optionBytes: .eide/project.st.option.bytes.ini
         otherCmds: ""
         proType: SWD
         resetMode: default
         runAfterProgram: true
         speed: 4000
-    uploader: STLink
+    uploader: OpenOCD

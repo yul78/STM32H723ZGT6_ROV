@@ -69,8 +69,8 @@ void Print1_Motor_To_VOFA(float data, uint8_t length)
 {
     char uart_buf[20];
     sprintf(uart_buf, "%.6f\n", data);
-    HAL_UART_Transmit(&huart6, (uint8_t *)uart_buf, length, 100);
-    HAL_UART_Transmit(&huart6, (uint8_t *)"\n", 1, 100);
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, length, 100);
+    HAL_UART_Transmit(&huart10, (uint8_t *)"\n", 1, 100);
 }
 
 void Print2_Motor_To_VOFA(float data1, float data2)
@@ -81,7 +81,7 @@ void Print2_Motor_To_VOFA(float data1, float data2)
     int len = sprintf(uart_buf, "%.3f,%.3f\n", data1, data2);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart6, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
 }
 
 void Print3_Motor_To_VOFA(float data1, float data2, float data3)
@@ -91,7 +91,7 @@ void Print3_Motor_To_VOFA(float data1, float data2, float data3)
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f\n", data1, data2, data3);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart6, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
 }
 
 void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
@@ -101,7 +101,7 @@ void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f\n", data1, data2, data3, data4);
     
     // 一次性发送，不要分段发送逗号和换行
-    HAL_UART_Transmit(&huart6, (uint8_t *)uart_buf, len, 10);
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
 }
 /* USER CODE END 0 */
 

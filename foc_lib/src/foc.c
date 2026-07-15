@@ -175,7 +175,7 @@ foc_state_t Foc_Loop(uint8_t motor_num)
 
     case MOTOR_STATE_OPEN:
         // 2. 开环启动：按设定转速匀速旋转
-        Foc_Open_Loop(motor, TS);
+        Foc_Open_Loop_Test(motor, TS);
 
         // ALIGN 期间若遥控器归零 → 回 IDLE
         if (fabsf(motor->target_speed) < SPEED_START_THRESHOLD)
@@ -366,12 +366,12 @@ foc_state_t Foc_Open_Loop_Test(foc_handle_t *motor, float dt)
     // 阶跃信号
     vofa_cnt++;
     if(vofa_cnt < 8500)
-        motor->pi_q.target = 2.0f;
+        motor->pi_d.target = 2.0f;
     else if(vofa_cnt < 17000)
-        motor->pi_q.target = 4.0f;
+        motor->pi_d.target = 4.0f;
     else
         vofa_cnt = 0;
-    motor->pi_d.target = 0.0f;
+    motor->pi_q.target = 0.0f;
 
     motor->pi_d.feedback = motor->i_dq.d;
     motor->pi_q.feedback = motor->i_dq.q;
