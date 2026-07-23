@@ -29,6 +29,8 @@ typedef struct {
 typedef struct {
     int16_t leftX;  // ×óÒ¡¸ËX  (-4000~4000)
     int16_t leftY;  // ×óÒ¡¸ËY  (-4000~4000)
+    int16_t rightX;
+    int16_t rightY;
 } Analysis_GamepadData_t;
 
 extern uint8_t gamepad_rxByte;

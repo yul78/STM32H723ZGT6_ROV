@@ -103,6 +103,7 @@
         <bEvRecOn>1</bEvRecOn>
         <bSchkAxf>0</bSchkAxf>
         <bTchkAxf>0</bTchkAxf>
+<<<<<<< HEAD
         <nTsel>3</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
@@ -114,6 +115,19 @@
         <tDlgDll></tDlgDll>
         <tDlgPa></tDlgPa>
         <tIfile></tIfile>
+=======
+        <nTsel>2</nTsel>
+        <sDll />
+        <sDllPa />
+        <sDlgDll />
+        <sDlgPa />
+        <sIfile />
+        <tDll />
+        <tDllPa />
+        <tDlgDll />
+        <tDlgPa />
+        <tIfile />
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
         <pMon>BIN\CMSIS_AGDI.dll</pMon>
       </DebugOpt>
       <TargetDriverDllRegistry>
@@ -157,45 +171,73 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
+<<<<<<< HEAD
           <LineNumber>60</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>134258946</Address>
+=======
+          <LineNumber>101</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134226464</Address>
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
+<<<<<<< HEAD
           <Filename>..\UserCode\BSP\bsp_interrupt.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression>\\Project\../UserCode/BSP/bsp_interrupt.c\60</Expression>
+=======
+          <Filename>..\UserCode\foc_lib\src\foc_math.c</Filename>
+          <ExecCommand />
+          <Expression>\\Project\../UserCode/foc_lib/src/foc_math.c\101</Expression>
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
         </Bp>
       </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
+<<<<<<< HEAD
           <ItemText>gps_data.latitude</ItemText>
+=======
+          <ItemText>htim-&gt;Instance</ItemText>
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
+<<<<<<< HEAD
           <ItemText>*north_m</ItemText>
+=======
+          <ItemText>adc1_buf[1]</ItemText>
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
+<<<<<<< HEAD
           <ItemText>*east_m</ItemText>
+=======
+          <ItemText>adc1_buf[0]</ItemText>
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
+<<<<<<< HEAD
           <ItemText>gps_data.longitude</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
           <ItemText>jy901_data.yaw</ItemText>
+=======
+          <ItemText>motor-&gt;i_cali_uvw</ItemText>
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
         </Ww>
       </WatchWindow1>
       <Tracepoint>
@@ -668,7 +710,7 @@
 
   <Group>
     <GroupName>BSP</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1172,7 +1214,7 @@
 
   <Group>
     <GroupName>foc_lib</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

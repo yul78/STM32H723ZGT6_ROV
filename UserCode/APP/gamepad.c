@@ -135,7 +135,18 @@ uint8_t Gamepad_IsButtonPressed(uint16_t btn)
  */
 void GamepadData_Analysis(GamepadData_t *raw, Analysis_GamepadData_t *data)
 {
-    // 将0~255映射到-2000~2000
-    data->leftX = ((int16_t)raw->leftX - 128) * 2000 / 127;
-    data->leftY = ((int16_t)raw->leftY - 128) * 2000 / 127;
+    #define JOY_DEADBAND 8   // 原始值死区，对应约190RPM
+
+    int16_t lx = (int16_t)raw->leftX  - 128;
+    int16_t ry = (int16_t)raw->rightY - 128;
+
+    // 死区处理：中点附近输出0，保证过零时能触发停机
+    if (lx > -JOY_DEADBAND && lx < JOY_DEADBAND) lx = 0;
+    if (ry > -JOY_DEADBAND && ry < JOY_DEADBAND) ry = 0;
+
+    data->leftX  = lx * 3000 / 127;
+    data->rightY = ry * 3000 / 127;
+    // rightX leftY 同理处理
+    data->rightX = ((int16_t)raw->rightX - 128) * 3000 / 127;
+    data->leftY  = ((int16_t)raw->leftY  - 128) * 3000 / 127;
 }

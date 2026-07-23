@@ -15,7 +15,7 @@ void Gamepad_Control(void)
     GamepadData_Analysis(Gamepad_raw_data, &Gamepad_analysis_data);
 
     // 根据分析后的数据进行速度控制
-    FOC_Set_Speed(1, Gamepad_analysis_data.leftX);
+    FOC_Set_Speed(1, Gamepad_analysis_data.rightX);
     FOC_Set_Speed(2, Gamepad_analysis_data.leftY);
 }
 
@@ -26,7 +26,7 @@ void Gamepad_Control(void)
  */
 void FOC_Set_Speed(uint8_t motor_num, int16_t speed)
 {
-  //Foc_Set_Speed(motor_num, (float)speed);
+  Foc_Set_Speed(motor_num, (float)speed);
 }
 
 void Drone_Balance_Control(void)

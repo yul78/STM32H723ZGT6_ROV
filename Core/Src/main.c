@@ -71,7 +71,44 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void Print1_Motor_To_VOFA(float data, uint8_t length)
+{
+    char uart_buf[20];
+    sprintf(uart_buf, "%.6f\n", data);
+    HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, length, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t *)"\n", 1, 100);
+}
 
+void Print2_Motor_To_VOFA(float data1, float data2)
+{
+
+    char uart_buf[256]; // 足够长以容纳三个数据
+    // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
+    int len = sprintf(uart_buf, "%.3f,%.3f\n", data1, data2);
+    
+    // 一次性发送，不要分段发送逗号和换行
+    FOC_DEBUG_Show(uart_buf);
+}
+
+void Print3_Motor_To_VOFA(float data1, float data2, float data3)
+{
+    char uart_buf[256]; // 足够长以容纳三个数据
+    // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
+    int len = sprintf(uart_buf, "%.3f,%.3f,%.3f\n", data1, data2, data3);
+    
+    // 一次性发送，不要分段发送逗号和换行
+    FOC_DEBUG_Show(uart_buf);
+}
+
+void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
+{
+    char uart_buf[256]; // 足够长以容纳三个数据
+    // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
+    int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f\n", data1, data2, data3, data4);
+    
+    // 一次性发送，不要分段发送逗号和换行
+    FOC_DEBUG_Show(uart_buf);
+}
 /* USER CODE END 0 */
 
 /**
@@ -82,7 +119,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  //SCB_DisableDCache();
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -130,16 +167,16 @@ int main(void)
   // OLED_Init();
   // MPU6050_Init();
   BSP_JY901_Init();
-  Water_Tank_Init();
+  // Water_Tank_Init();
   WaterADC_Init();
   APP_GPS_Init();
+<<<<<<< HEAD
   APP_Thrusters_Init();
   Navigation_Init();
+=======
+  APP_Thrusters_Init(); // 无刷电机初始化
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
   HAL_TIM_Base_Start_IT(&htim3);
-
-  // 无刷电机初始化
-  Foc_Init(1, &foc_hal);
-  Foc_Init(2, &foc_hal);
 
   HAL_Delay(50);
   /* USER CODE END 2 */
@@ -149,8 +186,16 @@ int main(void)
   GamepadData_t *pad;
 
   HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
+  
   while (1)
   {
+<<<<<<< HEAD
+=======
+    char foc_debug[128];
+    sprintf(foc_debug, "foc debug\r\n");
+    FOC_DEBUG_Show(foc_debug);
+
+>>>>>>> e316a3b08e399af9999c99982deb9752f3614c5b
     /***********485测试************/
     // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_SET); // 485发送使能
     // char *test_str = "Hello, 485!\n";
@@ -160,6 +205,11 @@ int main(void)
     // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
 
     /***********游戏手柄控制无刷电机************/
+    // HAL_GPIO_WritePin(USART2_485_GPIO_Port, USART2_485_Pin, GPIO_PIN_RESET); // 485接收使能
+    // Foc_Set_Speed(2, -1000);
+    // Foc_Set_Speed(1, 1000);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].i_uvw.u, FOC_Motor[2].i_uvw.v, FOC_Motor[2].i_uvw.w);
+    // HAL_UART_Transmit(&huart2, "1", 2, 10);
 
     Gamepad_Control();  // 游戏手柄控制无刷电机
     pad = Gamepad_GetData();
@@ -381,6 +431,11 @@ void PeriphCommonClock_Config(void)
 void Debug_USART_Show(const char* str)
 {
     HAL_UART_Transmit(&DEBUG_huart, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+}
+
+void FOC_DEBUG_Show(const char* str)
+{
+    HAL_UART_Transmit(&FOC_DEBUG_huart, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
 /* USER CODE END 4 */
 
