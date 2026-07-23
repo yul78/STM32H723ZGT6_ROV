@@ -37,6 +37,7 @@
 #include "Gamepad.h"
 #include "app_gps.h"
 #include "app_thrusters.h"
+#include "navigation.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -133,6 +134,7 @@ int main(void)
   WaterADC_Init();
   APP_GPS_Init();
   APP_Thrusters_Init();
+  Navigation_Init();
   HAL_TIM_Base_Start_IT(&htim3);
 
   // 无刷电机初始化
@@ -149,7 +151,6 @@ int main(void)
   HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_RESET); // 485接收使能
   while (1)
   {
-
     /***********485测试************/
     // HAL_GPIO_WritePin(USART10_485_GPIO_Port, USART10_485_Pin, GPIO_PIN_SET); // 485发送使能
     // char *test_str = "Hello, 485!\n";
@@ -227,9 +228,10 @@ int main(void)
 
     /************* 获取GPS数据 *************/
     APP_GPS_Task();
+    
     char gps_info[128];
     sprintf(gps_info, "lat:%.6f,lng:%.6f\n", gps_data.latitude, gps_data.longitude);
-    Debug_USART_Show(gps_info);
+    //Debug_USART_Show(gps_info);
 
     /**************** OLED显示ADC采样值 ****************/
     // OLED_ShowNum(64, 0, adc_value[0], 5, OLED_8X16);
@@ -270,7 +272,11 @@ int main(void)
     //OLED_ShowNum(64, 16, tank_rear.state, 1, OLED_8X16);
     //OLED_ShowFloatNum(64, 32, tank_rear.now_water_volume, 2, 2, OLED_8X16);
     //OLED_ShowFloatNum(64, 32, tank_front.target_water_volume, 2, 2, OLED_8X16);
-    
+
+    /*********************导航**********************/
+    Navigation_SetTarget(34.748287, 113.611572, 50.0f); // 设置目标点和半径
+    Navigation_Enable(1);
+    Navigation_Task();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

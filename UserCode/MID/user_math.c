@@ -1,4 +1,4 @@
-﻿#include "math.h"
+﻿#include "user_math.h"
 
 MotionStep calc_trapezoid_profile(TrapezoidVelocity profile) // 计算梯形运动规划
 {

@@ -79,6 +79,7 @@ static void Gamepad_ParseFrame(uint8_t *frame)
  */
 void Gamepad_RxCallback(uint8_t data)
 {
+
     switch (rxState) {
         case STATE_WAIT_HEAD1:
             if (data == FRAME_HEAD1) {

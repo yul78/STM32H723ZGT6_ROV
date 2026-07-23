@@ -1,5 +1,5 @@
-﻿#ifndef _MATH_H
-#define _MATH_H
+﻿#ifndef _USER_MATH_H
+#define _USER_MATH_H
 
 #include <math.h>
 #include <stdint.h>
@@ -24,4 +24,4 @@ MotionStep calc_trapezoid_profile(TrapezoidVelocity profile);
 // 根据当前步数计算对应速度（可转为对应的延时）
 uint16_t get_step_speed(int step_idx, MotionStep phase, TrapezoidVelocity profile);
 
-#endif 
+#endif /* _USER_MATH_H */

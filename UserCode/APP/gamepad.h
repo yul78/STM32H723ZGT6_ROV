@@ -2,8 +2,9 @@
 #define __GAMEPAD_H
 
 #include "main.h"
+#include "usart.h"
 
-#define gamepad_huart   huart6
+#define gamepad_huart   huart10
 
 // 协议定义
 #define FRAME_HEAD1     0xAA

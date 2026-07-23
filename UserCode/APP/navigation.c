@@ -1,6 +1,6 @@
+#include <math.h>
 #include "navigation.h"
 #include <string.h>
-#include <math.h>
 #include "app_gps.h"
 #include "control.h"
 #include "jy901.h"
@@ -11,9 +11,9 @@ static uint8_t navigation_enabled;
 static uint8_t navigation_outside;
 
 static pid_control_t navigation_turn_pid = {
-    .kp = NAV_TURN_PID_KP,
-    .ki = NAV_TURN_PID_KI,
-    .kd = NAV_TURN_PID_KD,
+    .kp = 8.0f,
+    .ki = 0.0f,
+    .kd = 0.0f,
     .integral = 0.0f,
     .last_error = 0.0f,
     .output_limit = NAV_MAX_TURN_SPEED,
@@ -22,32 +22,20 @@ static pid_control_t navigation_turn_pid = {
     .filtered_error = 0.0f
 };
 
-static pid_control_t navigation_forward_pid = {
-    .kp = NAV_FORWARD_PID_KP,
-    .ki = NAV_FORWARD_PID_KI,
-    .kd = NAV_FORWARD_PID_KD,
-    .integral = 0.0f,
-    .last_error = 0.0f,
-    .output_limit = NAV_MAX_FORWARD_SPEED,
-    .integral_limit = NAV_MAX_FORWARD_SPEED,
-    .a = 0.0f,
-    .filtered_error = 0.0f
-};
-
-#define NAV_DEG_TO_RAD                         0.01745329251994329577f
-#define NAV_METERS_PER_DEG_LAT                 111320.0f
+#define NAV_DEG_TO_RAD                         0.01745329251994329577f // ��/180Լ���ڴ�ֵ
+#define NAV_METERS_PER_DEG_LAT                 111320.0f               // ÿά��Լ111320��
 
 static uint8_t Navigation_TargetIsValid(void)
 {
     /* Target is valid only if: explicitly marked valid, has positive radius, and center is not obviously unset (0,0). */
-    uint8_t center_is_set = (fabsf(navigation_target.target_center_latitude) > 0.000001f) ||
-                            (fabsf(navigation_target.target_center_longitude) > 0.000001f);
+    uint8_t center_is_set = (fabs(navigation_target.target_center_latitude) > 0.000001f) ||
+                            (fabs(navigation_target.target_center_longitude) > 0.000001f);
     return (navigation_target.valid != 0U) && (navigation_target.target_radius_m > 0.0f) && (center_is_set != 0U);
 }
 
 static uint8_t Navigation_GpsIsValid(void)
 {
-    return (fabsf(gps_data.latitude) > 0.000001f) || (fabsf(gps_data.longitude) > 0.000001f);
+    return (fabs(gps_data.latitude) > 0.000001f) || (fabs(gps_data.longitude) > 0.000001f);
 }
 
 static float Navigation_ClampFloat(float value, float min_value, float max_value)
@@ -88,12 +76,12 @@ static void Navigation_ComputeOffsetMeters(float current_lat, float current_lon,
 
 static float Navigation_ComputeDistanceMeters(float north_m, float east_m)
 {
-    return sqrtf((north_m * north_m) + (east_m * east_m));
+    return sqrt((north_m * north_m) + (east_m * east_m));
 }
 
 static float Navigation_ComputeTargetHeadingDeg(float north_m, float east_m)
 {
-    return atan2f(east_m, north_m) * (180.0f / 3.14159265358979323846f);
+    return atan2(east_m, north_m) * (180.0f / 3.14159265358979323846f);
 }
 
 static void Navigation_StopMotors(void)
@@ -109,26 +97,9 @@ static void Navigation_ResetPid(pid_control_t *pid)
     pid->filtered_error = 0.0f;
 }
 
-static float Navigation_PidStep(pid_control_t *pid, float target, float actual)
-{
-    float error = target - actual;
-    float output = 0.0f;
-
-    pid->filtered_error = error;
-    pid->integral += pid->filtered_error;
-    pid->integral = Navigation_ClampFloat(pid->integral, -pid->integral_limit, pid->integral_limit);
-
-    output = (pid->kp * pid->filtered_error) +
-             (pid->ki * pid->integral) +
-             (pid->kd * (pid->filtered_error - pid->last_error));
-
-    pid->last_error = pid->filtered_error;
-    return Navigation_ClampFloat(output, -pid->output_limit, pid->output_limit);
-}
-
 static int16_t Navigation_ComputeTurnCommand(float heading_error_deg)
 {
-    float turn_output = Navigation_PidStep(&navigation_turn_pid, heading_error_deg, 0.0f);
+    float turn_output = pid_calculate(&navigation_turn_pid, heading_error_deg, 0.0f);
     return (int16_t)(turn_output * (float)NAV_MOTOR1_POLARITY);
 }
 
@@ -142,7 +113,7 @@ static int16_t Navigation_ComputeForwardCommand(float distance_m, float radius_m
         return 0;
     }
 
-    forward_output = Navigation_PidStep(&navigation_forward_pid, outside_distance_m, 0.0f);
+    forward_output = NAV_FORWARD_SPEED;
 
     if (abs_heading_error_deg > NAV_HEADING_ALIGN_DEG)
     {
@@ -184,6 +155,22 @@ void Navigation_Enable(uint8_t enable)
         Navigation_Stop();
     }
 }
+
+
+uint8_t Navigation_IsOutside(void)
+{
+    return navigation_outside;
+}
+
+void Navigation_Stop(void)
+{
+    /* Stop motors, disable navigation, reset state, and clear PID history. */
+    navigation_enabled = 0U;
+    navigation_outside = 0U;
+    Navigation_ResetPid(&navigation_turn_pid);
+    Navigation_StopMotors();
+}
+
 
 void Navigation_Task(void)
 {
@@ -230,30 +217,16 @@ void Navigation_Task(void)
         Navigation_StopMotors();
         return;
     }
-
+    else
     {
         float target_heading_deg = Navigation_ComputeTargetHeadingDeg(north_m, east_m);
         float current_heading_deg = Navigation_NormalizeAngleDeg(jy901_data.yaw + NAV_YAW_OFFSET_DEG);
         float heading_error_deg = Navigation_NormalizeAngleDeg(target_heading_deg - current_heading_deg);
-        float abs_heading_error_deg = fabsf(heading_error_deg);
+        float abs_heading_error_deg = fabs(heading_error_deg);
         int16_t turn_command = Navigation_ComputeTurnCommand(heading_error_deg);
         int16_t forward_command = Navigation_ComputeForwardCommand(distance_m, navigation_target.target_radius_m, abs_heading_error_deg);
 
         FOC_Set_Speed(1U, turn_command);
         FOC_Set_Speed(2U, forward_command);
     }
-}
-
-uint8_t Navigation_IsOutside(void)
-{
-    return navigation_outside;
-}
-
-void Navigation_Stop(void)
-{
-    /* Stop motors, reset state, and clear PID history. */
-    navigation_outside = 0U;
-    Navigation_ResetPid(&navigation_turn_pid);
-    Navigation_ResetPid(&navigation_forward_pid);
-    Navigation_StopMotors();
 }

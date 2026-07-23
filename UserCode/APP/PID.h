@@ -16,5 +16,5 @@ typedef struct {
 } pid_control_t;
 
 extern pid_control_t balance_pid; // 水舱平衡PID控制器参数结构体
-
+float pid_calculate(pid_control_t* pid, float expect, float actual);
 #endif

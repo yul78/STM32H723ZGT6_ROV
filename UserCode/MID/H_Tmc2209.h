@@ -2,7 +2,7 @@
 #define __H_TMC2209_H
 
 #include "gpio.h"
-#include "math.h"
+#include "user_math.h"
 #include "tim.h"
 
 typedef enum {

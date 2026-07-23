@@ -21,7 +21,7 @@ pid_control_t balance_pid = {
  * @param actual: 真实值
  * @return PID输出值
  */
-static float pid_calculate(pid_control_t* pid, float expect, float actual) {
+float pid_calculate(pid_control_t* pid, float expect, float actual) {
     float error = expect - actual;
 
     /* 一阶滤波 */

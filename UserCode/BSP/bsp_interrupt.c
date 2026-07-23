@@ -63,7 +63,6 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         jy901_uart.received_byte = Size; // 接收到的字节数
 
         HAL_UARTEx_ReceiveToIdle_DMA(jy901_uart.huart, JY_RxBuffer, JY_Buffer_Size);
-        
     }
 }
 
@@ -88,6 +87,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         #endif
         // 将收到的字节交给手柄解析
         Gamepad_RxCallback(gamepad_rxByte);
+        //uint8_t testdata = gamepad_rxByte;
+				//uint8_t testdata = 6;
+        HAL_UART_Transmit(&huart6, &gamepad_rxByte, 1, HAL_MAX_DELAY); // 调试：回显接收到的字节
 
         // 重新开启接收
         HAL_UART_Receive_IT(huart, &gamepad_rxByte, 1);
