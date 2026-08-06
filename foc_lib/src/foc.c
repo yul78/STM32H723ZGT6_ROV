@@ -204,12 +204,10 @@ foc_state_t Foc_Loop(uint8_t motor_num)
             motor->pi_pll.integral = motor->target_speed > 0 ? fabsf(motor->speed_observer) : -fabsf(motor->speed_observer);
             motor->pi_d.integral = 0.0f;
             motor->pi_d.output = 0.0f;
-
-            motor->pi_speed.integral = 0.0f; // 初始驱动力
-            motor->pi_speed.output = 6.7f;
-
-            motor->pi_q.integral = PWM_VBUS * 0.2f; // 给个初始积分，约2.4V
-            motor->pi_q.output = PWM_VBUS * 0.25f;
+            
+            motor->pi_q.target = motor->i_dq.q;
+            motor->pi_q.integral = motor->u_dq.q; // 给个初始积分，约2.4V
+            motor->pi_q.output = motor->u_dq.q;
 
             if(motor->target_speed > 0)
             {
@@ -222,6 +220,10 @@ foc_state_t Foc_Loop(uint8_t motor_num)
                 motor->speed_ramp_target = -motor->speed_ramp_target;
                 // motor->pi_pll.integral = -OPEN_ELEC_SPEED;
             }
+
+            float pi_iq_hold = motor->i_dq.q;
+            motor->pi_speed.integral = 0.3f; // 初始驱动力
+            motor->pi_speed.output = pi_iq_hold;
                 
             motor->theta_Observer = motor->theta;
             motor->PI_Speed_cnt = 0;
@@ -404,12 +406,12 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     foc_state_t foc_state = FOC_OK;
     // pi输出限幅缓启动
     float pi_limit;
-    if(motor->close_cnt < 500)           // 缩短到500拍（0.04秒）
-    {
-        motor->close_cnt++;
-        pi_limit = 3.0f + motor->close_cnt * 0.007f;  // 3V→6.5V，0.04秒到位
-    }
-    else
+    // if(motor->close_cnt < 500)           // 缩短到500拍（0.04秒）
+    // {
+    //     motor->close_cnt++;
+    //     pi_limit = 3.0f + motor->close_cnt * 0.007f;  // 3V→6.5V，0.04秒到位
+    // }
+    // else
         pi_limit = PI_LIMIT;
 
     // motor->close_cnt++;
