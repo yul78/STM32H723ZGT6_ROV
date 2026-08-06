@@ -112,6 +112,10 @@ void MX_TIM1_Init(void)
   }
   /* USER CODE BEGIN TIM1_Init 2 */
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_OC4REF; // 将通道4的比较信号映射到TRGO
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
 

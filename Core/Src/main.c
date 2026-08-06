@@ -63,6 +63,10 @@ static void MPU_Config(void);
 /* USER CODE BEGIN 0 */
 extern uint16_t adc2_buf[2];
 extern uint16_t adc1_buf[2];
+
+volatile uint16_t tim1_irq_cnt;
+volatile uint8_t tim1_irq_edge;
+
 // foc_handle_t motor0;
 
 void Print1_Motor_To_VOFA(float data, uint8_t length)
@@ -164,7 +168,7 @@ int main(void)
   {
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_uvw.u, FOC_Motor[2].i_uvw.v, FOC_Motor[2].i_uvw.w);
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab.beta);
-    // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab_hat.alpha);
+    Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab_hat.alpha);
     // Print2_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].u_dq.d);
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].i_dq.d);
     // Print2_Motor_To_VOFA(FOC_Motor[2].e_ab.alpha, FOC_Motor[2].e_ab.beta);
@@ -319,8 +323,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(htim->Instance == TIM1)
     {
+        tim1_irq_cnt = __HAL_TIM_GetCounter(htim);
+        tim1_irq_edge = READ_REG(htim->Instance->CNT);
+        GPIOG->BSRR = GPIO_PIN_7 << 16;
         Foc_Loop(2);
-        HAL_GPIO_WritePin(GPIOG, GPIO_PIN_7, GPIO_PIN_RESET);
+        GPIOG->BSRR = GPIO_PIN_7;
+        // HAL_GPIO_WritePin(GPIOG, GPIO_PIN_7, GPIO_PIN_RESET);
     }
     if(htim->Instance == TIM8)
     {

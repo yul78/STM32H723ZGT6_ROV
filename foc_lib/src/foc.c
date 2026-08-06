@@ -175,7 +175,7 @@ foc_state_t Foc_Loop(uint8_t motor_num)
 
     case MOTOR_STATE_OPEN:
         // 2. 开环启动：按设定转速匀速旋转
-        Foc_Open_Loop_Test(motor, TS);
+        Foc_Open_Loop(motor, TS);
 
         // ALIGN 期间若遥控器归零 → 回 IDLE
         if (fabsf(motor->target_speed) < SPEED_START_THRESHOLD)

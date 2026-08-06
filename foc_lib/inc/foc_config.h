@@ -11,8 +11,19 @@ extern "C" {
 #define ONLY_OPEN_LOOP
 #define FOC_SPEED_CONTROL
 // #define FOC_CLOSE_I_DEBUG
-#define FOC_PLL_ENABLE                      // 使能锁相环
+// #define FOC_PLL_ENABLE                      // 使能锁相环
 // #define FW_ENABLE                           // 使能弱磁
+
+/*
+在饱和边界内部，离散误差极点近似为：
+1 - (R + SMO_K/SAT_BOUNDARY)·dt/L
+= 1 - (0.2223 + 5) × 0.4455
+≈ -1.326
+绝对值大于1，意味着当前 SMO_K=4、SAT_BOUNDARY=0.8、25kHz 的组合在边界层内理论上可能产生离散振荡或明显抖振。直接再减一个误差会让情况更严重。
+以当前40µs周期，稳定条件近似要求：
+SMO_K / SAT_BOUNDARY < 2L/dt - R
+SMO_K / SAT_BOUNDARY < 4.27 V/A
+*/
 
 
 // PWM参数
@@ -21,7 +32,7 @@ extern "C" {
 #define PWM_VBUS                12.4f           // VBUS母线电压
 #define ADC_RESOLUTION          65535.0f        // 16位ADC分辨率
 // #define TS                      0.0001176f     // 采样时间间隔
-#define TS                      0.00008f     // 采样时间间隔
+#define TS                      0.00004f     // 采样时间间隔
 
 // INA240参数   
 #define INA240_GAIN             50.0f           // INA240A2增益50V/V
@@ -56,10 +67,10 @@ extern "C" {
 #define BTN7960_DEAD_TIME_S     0.0000005f 
 
 // 电流环参数
-#define PI_KP_D                 0.56418f 
-#define PI_KI_D                 1396.511f   
-#define PI_KP_Q                 0.56418f 
-#define PI_KI_Q                 1396.511f
+#define PI_KP_D                 0.282f 
+#define PI_KI_D                 696.511f   
+#define PI_KP_Q                 0.282f 
+#define PI_KI_Q                 696.511f
 // #define PI_KP_D                 0.11224f 
 // #define PI_KI_D                 277.827f   
 // #define PI_KP_Q                 0.11224f 
