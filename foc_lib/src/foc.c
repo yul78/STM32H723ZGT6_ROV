@@ -286,10 +286,6 @@ foc_state_t Foc_Open_Loop(foc_handle_t *motor, float dt)
     motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.u) * CURRENT_SCALE;
     motor->i_uvw.u = (float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
-    // motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-    //                                                                                                       : motor->i_uvw.v;
-    // motor->i_uvw.u = (motor->i_uvw.u > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.u < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-    //                                                                                                       : motor->i_uvw.u;
 
     if(fabs(motor->i_uvw.v) >= CURRENT_LIMIT)
     {
@@ -300,12 +296,6 @@ foc_state_t Foc_Open_Loop(foc_handle_t *motor, float dt)
     if(fabs(motor->i_uvw.u) >= CURRENT_LIMIT)
     {
         motor->i_uvw.u = motor->i_uvw.u > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
-        foc_state = FOC_ERR_OVERCURRENT;
-    }
-
-    if(fabs(motor->i_uvw.v) >= CURRENT_LIMIT)
-    {
-        motor->i_uvw.v = motor->i_uvw.v > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
         foc_state = FOC_ERR_OVERCURRENT;
     }
 
@@ -406,30 +396,18 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     foc_state_t foc_state = FOC_OK;
     // pi输出限幅缓启动
     float pi_limit;
-    // if(motor->close_cnt < 500)           // 缩短到500拍（0.04秒）
-    // {
-    //     motor->close_cnt++;
-    //     pi_limit = 3.0f + motor->close_cnt * 0.007f;  // 3V→6.5V，0.04秒到位
-    // }
-    // else
+    if(motor->close_cnt < 500)           // 缩短到500拍（0.04秒）
+    {
+        motor->close_cnt++;
+        pi_limit = 3.0f + motor->close_cnt * 0.007f;  // 3V→6.5V，0.04秒到位
+    }
+    else
         pi_limit = PI_LIMIT;
-
-    // motor->close_cnt++;
-
-    // float blend = motor->close_cnt / 1000.0f;
-
-    // if(blend > 1.0f) blend = 1.0f;
-
-    // motor->theta = (1.0f - blend) * motor->theta + blend * motor->theta_Observer;
 
     // 1. 电流校准（减去零点偏移）
     motor->i_uvw.v = -(float)((int32_t)motor->i_adc_u - motor->i_cali_uvw.u) * CURRENT_SCALE;
     motor->i_uvw.u = (float)((int32_t)motor->i_adc_w - motor->i_cali_uvw.w) * CURRENT_SCALE;
     // 2. 电流限幅（保护电机）
-    // motor->i_uvw.v = (motor->i_uvw.v > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.v < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-    //                                                                                                       : motor->i_uvw.v;
-    // motor->i_uvw.u = (motor->i_uvw.u > CURRENT_LIMIT) ? CURRENT_LIMIT : (motor->i_uvw.u < -CURRENT_LIMIT) ? -CURRENT_LIMIT
-    //                                                                                                       : motor->i_uvw.u;
 
     if(fabs(motor->i_uvw.v) >= CURRENT_LIMIT)
     {
@@ -440,12 +418,6 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     if(fabs(motor->i_uvw.u) >= CURRENT_LIMIT)
     {
         motor->i_uvw.u = motor->i_uvw.u > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
-        foc_state = FOC_ERR_OVERCURRENT;
-    }
-
-    if(fabs(motor->i_uvw.v) >= CURRENT_LIMIT)
-    {
-        motor->i_uvw.v = motor->i_uvw.v > 0 ? CURRENT_LIMIT : -CURRENT_LIMIT;
         foc_state = FOC_ERR_OVERCURRENT;
     }
 

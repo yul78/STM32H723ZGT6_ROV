@@ -69,14 +69,7 @@ SMO_K / SAT_BOUNDARY < 4.27 V/A
 #define PI_KI_D                 696.511f   
 #define PI_KP_Q                 0.282f 
 #define PI_KI_Q                 696.511f
-// #define PI_KP_D                 0.11224f 
-// #define PI_KI_D                 277.827f   
-// #define PI_KP_Q                 0.11224f 
-// #define PI_KI_Q                 277.827f
-// #define PI_KP_D                 0.564f    // 2π*带宽*L = 2*3.14*1000*0.00008979
-// #define PI_KI_D                 2472.0f   // R/L = 0.222/0.00008979
-// #define PI_KP_Q                 0.564f 
-// #define PI_KI_Q                 2472.0f
+
 #define PI_KP_SPEED             0.0005f         // 速度PI比例系数
 #define PI_KI_SPEED             0.007f          // 速度PI积分系数
 #define PI_LIMIT_SPEED          14.0f           // 速度PI输出限幅
