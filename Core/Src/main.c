@@ -64,6 +64,12 @@ static void MPU_Config(void);
 extern uint16_t adc2_buf[2];
 extern uint16_t adc1_buf[2];
 
+extern float Vd_raw;
+extern float Vq_raw;
+extern float Vd_New;
+extern float Vq_New;
+extern float V_scale;
+
 // foc_handle_t motor0;
 
 void Print1_Motor_To_VOFA(float data, uint8_t length)
@@ -185,7 +191,7 @@ int main(void)
     // Print4_Motor_To_VOFA(FOC_Motor[2].i_dq.d, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.output, FOC_Motor[2].speed);
     // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_observer, angle_error);
 
-    Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].e_amp);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].e_amp);
     // Print6_Motor_To_VOFA(
     //   FOC_Motor[2].e_amp, 
     //   angle_error, 
@@ -203,6 +209,7 @@ int main(void)
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_ab_hat.alpha, FOC_Motor[2].i_ab_hat.beta, angle_error);
     // Print3_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].i_dq.q, FOC_Motor[2].speed);
     // Print4_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed, angle_error);
+    Print4_Motor_To_VOFA(Vq_New, Vq_raw, V_scale, FOC_Motor[2].pi_q.integral);
     // Print4_Motor_To_VOFA(
     //     FOC_Motor[2].i_dq.d,          // 期望≈0
     //     FOC_Motor[2].i_dq.q,          // 期望≈正7值稳定

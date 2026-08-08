@@ -14,6 +14,12 @@
 foc_handle_t FOC_Motor[MAX_MOTOR_NUM + 1] = {0};
 uint32_t vofa_cnt = 0;
 
+float Vd_raw;
+float Vq_raw;
+float Vd_New;
+float Vq_New;
+float V_scale;
+
 /**
  * @brief foc初始化
  * 
@@ -501,36 +507,35 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     float error_d = motor->pi_d.target - motor->pi_d.feedback;
     float error_q = motor->pi_q.target - motor->pi_q.feedback;
 
-    float Vd_raw = motor->pi_d.kp * error_d + motor->pi_d.integral;
-    float Vq_raw = motor->pi_q.kp * error_q + motor->pi_q.integral;
+    Vd_raw = motor->pi_d.kp * error_d + motor->pi_d.integral;
+    Vq_raw = motor->pi_q.kp * error_q + motor->pi_q.integral;
 
     float V_limt = pi_limit;
     float V_mag = sqrtf(Vd_raw * Vd_raw + Vq_raw * Vq_raw);
 
-    float Vd_New = Vd_raw;
-    float Vq_New = Vq_raw;
-
+    Vd_New = Vd_raw;
+    Vq_New = Vq_raw;
+    
+    V_scale = 1.0f;
     if(V_mag > V_limt)
     {
-        float V_scale = V_limt / V_mag;
+        V_scale = V_limt / V_mag;
         Vd_New *= V_scale;
         Vq_New *= V_scale;
     }
 
-    float kaw = 0.15f;;
+    float kaw = 0.1f;
     motor->pi_d.integral += motor->pi_d.ki * error_d * dt + kaw * (Vd_New - Vd_raw);
     motor->pi_q.integral += motor->pi_q.ki * error_q * dt + kaw * (Vq_New - Vq_raw);
 
     motor->pi_d.integral = fmaxf(-V_limt, fminf(V_limt, motor->pi_d.integral));
     motor->pi_q.integral = fmaxf(-V_limt, fminf(V_limt, motor->pi_q.integral));
 
-    motor->u_dq.d = Vd_New;
-    motor->u_dq.q = Vq_New;
+    motor->pi_d.output = Vd_New;
+    motor->pi_q.output = Vq_New;
 
-    // FOC_PI_Regulator(&motor->pi_d, dt); // pid计算
-    // FOC_PI_Regulator(&motor->pi_q, dt); // pid计算
-    // motor->u_dq.d = motor->pi_d.output;
-    // motor->u_dq.q = motor->pi_q.output;
+    motor->u_dq.d = motor->pi_d.output;
+    motor->u_dq.q = motor->pi_q.output;
 
     // ------------------------------建议：在调试阶段将电压限幅设得极低（如 1.5V），保护驱动板----------------------------
     // float voltage_limit = 6.0f;
