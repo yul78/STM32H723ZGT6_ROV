@@ -179,7 +179,7 @@ void FOC_SVPWM_Generate(foc_handle_t *motor)
     float Tx = 0.0f, Ty = 0.0f;
     uint8_t sector;
 
-    float k = PWM_ARR / PWM_VBUS;
+    float k = SQRT_3 * PWM_ARR / PWM_VBUS;
     float U1 = u_beta;
     float U2 = -SQRT_3_2 * u_alpha - u_beta / 2.0f;
     float U3 = SQRT_3_2 * u_alpha - u_beta / 2.0f;

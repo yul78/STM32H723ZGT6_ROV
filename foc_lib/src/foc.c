@@ -222,7 +222,7 @@ foc_state_t Foc_Loop(uint8_t motor_num)
             }
 
             float pi_iq_hold = motor->i_dq.q;
-            motor->pi_speed.integral = 0.3f; // 初始驱动力
+            motor->pi_speed.integral = 0.22f; // 初始驱动力
             motor->pi_speed.output = pi_iq_hold;
                 
             motor->theta_Observer = motor->theta;

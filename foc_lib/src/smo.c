@@ -65,15 +65,15 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     angle_error *= speed_sign;
     
     // 归一化：消除转速对增益的影响
-    float e_amp = sqrtf(motor->e_ab.alpha * motor->e_ab.alpha 
+    motor->e_amp = sqrtf(motor->e_ab.alpha * motor->e_ab.alpha 
                 + motor->e_ab.beta  * motor->e_ab.beta);
     
     // 软限幅
     float e_amp_min = 0.5f;
-    if (e_amp > e_amp_min) {
-        angle_error /= e_amp;
-    } else if (e_amp > 0.1f) {
-        angle_error = angle_error / e_amp_min * (e_amp / e_amp_min); // 线性衰减到0
+    if (motor->e_amp > e_amp_min) {
+        angle_error /= motor->e_amp;
+    } else if (motor->e_amp > 0.1f) {
+        angle_error = angle_error / e_amp_min * (motor->e_amp / e_amp_min); // 线性衰减到0
     } else {
         angle_error = 0.0f;
     }

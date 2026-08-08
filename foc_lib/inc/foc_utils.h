@@ -25,7 +25,7 @@ extern "C" {
 #define CURRENT_SCALE       (PWM_SCALE / (INA240_GAIN * SAMPLE_RESISTOR * ADC_RESOLUTION))  // 从ad数值转换到实际电流值的转换系数
 #define TS_MOTORL           (TS/MOTOR_L)
 #define DEAD_COMP_V         (PWM_VBUS * BTN7960_DEAD_TIME_S / TS)  
-#define PI_LIMIT            12.0f                                     // 最大不失真电压
+#define PI_LIMIT            (PWM_VBUS * 0.95f / SQRT_3)                                     // 最大不失真电压
 
 
 #ifdef __cplusplus

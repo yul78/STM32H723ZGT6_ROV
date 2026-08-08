@@ -64,9 +64,6 @@ static void MPU_Config(void);
 extern uint16_t adc2_buf[2];
 extern uint16_t adc1_buf[2];
 
-volatile uint16_t tim1_irq_cnt;
-volatile uint8_t tim1_irq_edge;
-
 // foc_handle_t motor0;
 
 void Print1_Motor_To_VOFA(float data, uint8_t length)
@@ -103,6 +100,16 @@ void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
     char uart_buf[256]; // 足够长以容纳三个数据
     // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
     int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f\n", data1, data2, data3, data4);
+    
+    // 一次性发送，不要分段发送逗号和换行
+    HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
+}
+
+void Print6_Motor_To_VOFA(float data1, float data2, float data3, float data4, float data5, float data6)
+{
+    char uart_buf[256 * 3]; // 足够长以容纳三个数据
+    // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
+    int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f, %.3f,%.3f\n", data1, data2, data3, data4, data5, data6);
     
     // 一次性发送，不要分段发送逗号和换行
     HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
@@ -178,7 +185,17 @@ int main(void)
     // Print4_Motor_To_VOFA(FOC_Motor[2].i_dq.d, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.output, FOC_Motor[2].speed);
     // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_observer, angle_error);
 
-    Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].pi_q.output);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_ramp_target, FOC_Motor[2].e_amp);
+    Print6_Motor_To_VOFA(
+      FOC_Motor[2].e_amp, 
+      angle_error, 
+      FOC_Motor[2].i_dq.q, 
+      FOC_Motor[2].pi_q.target, 
+      FOC_Motor[2].u_dq.q, 
+      FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
+
+    Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].mode, sqrt(FOC_Motor[2].u_dq.d + FOC_Motor[2].u_dq.q));
+    // Print3_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target);
     // Print3_Motor_To_VOFA(FOC_Motor[2].theta_Observer, FOC_Motor[2].theta, FOC_Motor[2].pi_q.target);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.output);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.d, FOC_Motor[2].pi_d.target, FOC_Motor[2].pi_d.output);
@@ -210,7 +227,7 @@ int main(void)
     //                  FOC_Motor[2].speed,          // 转速
     //                  FOC_Motor[2].fw_active);     // 弱磁是否激活
 
-    Foc_Set_Speed(2, 5500);
+    Foc_Set_Speed(2, 5000);
     // Foc_Set_Speed(1, 50);
     // Print2_Motor_To_VOFA((float)adc2_buf[0], (float)adc1_buf[1]);
     // 速度环调试需要看4个量
@@ -323,8 +340,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(htim->Instance == TIM1)
     {
-        tim1_irq_cnt = __HAL_TIM_GetCounter(htim);
-        tim1_irq_edge = READ_REG(htim->Instance->CNT);
         GPIOG->BSRR = GPIO_PIN_7 << 16;
         Foc_Loop(2);
         GPIOG->BSRR = GPIO_PIN_7;

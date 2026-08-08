@@ -43,7 +43,7 @@ SMO_K / SAT_BOUNDARY < 4.27 V/A
 #define SPEED_OBSERBER_LPF      0.1f           // 观测器求得的速度的低通滤波系数
 #define OB_SPEED_LIMIT          10000.0f         // 观测速度限幅
 #define PLL_INIT_LIMIT          1500.0f         // PLL积分限幅4,673.521850899743
-#define SAT_BOUNDARY            0.6f            // sat函数饱和边界   
+#define SAT_BOUNDARY            1.2f            // sat函数饱和边界   
 
 // ===== 弱磁控制参数 =====
 #define CURRENT_PI_LIMIT        6.801f      // 电流环电压输出限幅（V），与PI limit一致
@@ -78,7 +78,7 @@ SMO_K / SAT_BOUNDARY < 4.27 V/A
 // #define PI_KP_Q                 0.564f 
 // #define PI_KI_Q                 2472.0f
 #define PI_KP_SPEED             0.0005f         // 速度PI比例系数
-#define PI_KI_SPEED             0.0007f          // 速度PI积分系数
+#define PI_KI_SPEED             0.007f          // 速度PI积分系数
 #define PI_LIMIT_SPEED          14.0f           // 速度PI输出限幅
 
 // 速度定义（分离开环和闭环）

@@ -114,6 +114,8 @@ typedef struct
     foc_ab_t                i_ab_hat;           // 估计的电流
     foc_dq_t                u_dq;               // q轴和d轴电压
 
+    float                   e_amp;              // 反电动势幅值
+
     /*pid参数*/     
     foc_pid_t               pi_d;               // d轴电流PI
     foc_pid_t               pi_q;               // q轴电流PI
