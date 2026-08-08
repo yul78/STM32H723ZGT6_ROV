@@ -29,7 +29,7 @@ SMO_K / SAT_BOUNDARY < 4.27 V/A
 // PWM参数
 #define PWM_ARR                 5500.0f         // 自动重载值
 #define PWM_SCALE               3.3f            // ADC参考电压
-#define PWM_VBUS                12.4f           // VBUS母线电压
+#define PWM_VBUS                12.3f           // VBUS母线电压
 #define ADC_RESOLUTION          65535.0f        // 16位ADC分辨率
 // #define TS                      0.0001176f     // 采样时间间隔
 #define TS                      0.00004f     // 采样时间间隔
@@ -57,6 +57,7 @@ SMO_K / SAT_BOUNDARY < 4.27 V/A
 #define CURRENT_LIMIT           20.0f           // 最大相电流(A)
 #define MOTOR_R                 0.222261666f      // 相电阻 (Ohm)
 #define MOTOR_L                 0.0000897929f   // 相电感 (Henry)
+#define MOTOR_PSI_F             0.002f          // 电机磁链
 #define MAX_MOTOR_NUM           2               // 最大电机数量
 
 // PLL参数

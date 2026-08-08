@@ -179,6 +179,7 @@ int main(void)
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET); // 485接收使能
   while (1)
   {
+    // Print2_Motor_To_VOFA((FOC_Motor[2].u_dq.q - FOC_Motor[2].pi_q.feedback * MOTOR_R) / FOC_Motor[2].speed_observer, FOC_Motor[2].speed);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_uvw.u, FOC_Motor[2].i_uvw.v, FOC_Motor[2].i_uvw.w);
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab.beta);
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab_hat.alpha);
@@ -203,13 +204,14 @@ int main(void)
     // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].mode, sqrt(FOC_Motor[2].u_dq.d + FOC_Motor[2].u_dq.q));
     // Print3_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target);
     // Print3_Motor_To_VOFA(FOC_Motor[2].theta_Observer, FOC_Motor[2].theta, FOC_Motor[2].pi_q.target);
-    // Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.output);
+    Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.output);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.d, FOC_Motor[2].pi_d.target, FOC_Motor[2].pi_d.output);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_adc_u, FOC_Motor[2].i_uvw.u, FOC_Motor[2].pi_q.target);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_ab_hat.alpha, FOC_Motor[2].i_ab_hat.beta, angle_error);
     // Print3_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].i_dq.q, FOC_Motor[2].speed);
     // Print4_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed, angle_error);
-    Print4_Motor_To_VOFA(Vq_New, Vq_raw, V_scale, FOC_Motor[2].pi_q.integral);
+    // Print4_Motor_To_VOFA(Vq_New, Vq_raw, V_scale, FOC_Motor[2].pi_q.integral);
+    // Print4_Motor_To_VOFA(FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.feedback, V_scale, FOC_Motor[2].pi_q.integral);
     // Print4_Motor_To_VOFA(
     //     FOC_Motor[2].i_dq.d,          // 期望≈0
     //     FOC_Motor[2].i_dq.q,          // 期望≈正7值稳定

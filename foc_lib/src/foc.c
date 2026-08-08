@@ -506,9 +506,13 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
 
     float error_d = motor->pi_d.target - motor->pi_d.feedback;
     float error_q = motor->pi_q.target - motor->pi_q.feedback;
+    float omega_e = motor->speed_observer;  // 电角速度 rad/s，带正负号
 
-    Vd_raw = motor->pi_d.kp * error_d + motor->pi_d.integral;
-    Vq_raw = motor->pi_q.kp * error_q + motor->pi_q.integral;
+    float vd_ff = -omega_e * MOTOR_L * motor->i_dq.q; // d轴前馈
+    float vq_ff =  omega_e * MOTOR_L * motor->i_dq.d + omega_e * MOTOR_PSI_F; // q轴前馈
+
+    Vd_raw = motor->pi_d.kp * error_d + motor->pi_d.integral + vd_ff;
+    Vq_raw = motor->pi_q.kp * error_q + motor->pi_q.integral + vq_ff;
 
     float V_limt = pi_limit;
     float V_mag = sqrtf(Vd_raw * Vd_raw + Vq_raw * Vq_raw);

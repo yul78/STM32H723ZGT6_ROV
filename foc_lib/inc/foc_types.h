@@ -129,7 +129,7 @@ typedef struct
     float                   speed;              // 电机转速(rpm)
     float                   theta_Observer;     // 观测器得到的转子电角度(rad)
     float                   theta_obs_prev;     // 上一拍观测角度，用于微分估速
-    float                   speed_observer;     // 观测器得到的电机转速(rpm)
+    float                   speed_observer;     // 观测器得到的电机转速(rad/s)
     float                   speed_sign;         // 电机转子正转还是反转
 
     float   id_fw;                              // 弱磁注入的负 id（弱磁控制器输出，≤0）
