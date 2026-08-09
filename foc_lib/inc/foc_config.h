@@ -39,11 +39,11 @@ SMO_K / SAT_BOUNDARY < 4.27 V/A
 #define SAMPLE_RESISTOR         0.00148f        // 采样电阻A1mΩ
 
 // 观测器参数   
-#define SMO_K                   4.0f            // 滑模增益 (根据实际效果调试)
+#define SMO_K                   8.0f            // 滑模增益 (根据实际效果调试)
 #define SPEED_OBSERBER_LPF      0.1f           // 观测器求得的速度的低通滤波系数
 #define OB_SPEED_LIMIT          10000.0f         // 观测速度限幅
 #define PLL_INIT_LIMIT          1500.0f         // PLL积分限幅4,673.521850899743
-#define SAT_BOUNDARY            1.2f            // sat函数饱和边界   
+#define SAT_BOUNDARY            4.0f            // sat函数饱和边界   
 
 // ===== 弱磁控制参数 =====
 #define CURRENT_PI_LIMIT        6.801f      // 电流环电压输出限幅（V），与PI limit一致

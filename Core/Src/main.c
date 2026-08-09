@@ -69,6 +69,7 @@ extern float Vq_raw;
 extern float Vd_New;
 extern float Vq_New;
 extern float V_scale;
+extern float smo_sat_ratio;
 
 // foc_handle_t motor0;
 
@@ -201,7 +202,7 @@ int main(void)
     //   FOC_Motor[2].u_dq.q, 
     //   FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
 
-    Print3_Motor_To_VOFA(FOC_Motor[2].e_amp, angle_error, FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
+    Print3_Motor_To_VOFA(V_scale, smo_sat_ratio, FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
 
     // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].mode, sqrt(FOC_Motor[2].u_dq.d + FOC_Motor[2].u_dq.q));
     // Print3_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target);

@@ -12,6 +12,7 @@
 #include "smo.h"
 
 float angle_error;
+float smo_sat_ratio;
 
 /**
  * @brief SMO观测器的算法
@@ -33,6 +34,8 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     // ===== 第2步：滑模切换项（使用 SMO_K 和 SAT_BOUNDARY）=====
     float z_alpha = SMO_K * FOC_sat(err_alpha, SAT_BOUNDARY);
     float z_beta  = SMO_K * FOC_sat(err_beta,  SAT_BOUNDARY);
+
+    smo_sat_ratio = fmaxf(fabsf(z_alpha), fabsf(z_beta)) / SMO_K;
     
     // ===== 第3步：电流观测器迭代 =====
     // Î[k+1] = a·Î[k] + b·(U[k] - Z[k])
