@@ -10,6 +10,7 @@
  */
 
 #include "smo.h"
+#include "foc.h"
 
 float angle_error;
 float smo_sat_ratio;
@@ -21,11 +22,12 @@ float smo_sat_ratio;
  * @param dt 单位时间
  * @param mode 当前旋转模式是开环还是闭环
  */
-void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
+foc_state_t SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
 {
     // ===== 预计算常数（可在初始化时计算一次）=====
     float a = 1.0f - MOTOR_R * dt / MOTOR_L;  // 0.8545
     float b = dt / MOTOR_L;                    // 0.6550
+    foc_state_t smo_satus = FOC_SMO_OK;
     
     // ===== 第1步：电流误差 =====
     float err_alpha = motor->i_ab_hat.alpha - motor->i_ab.alpha;
@@ -80,6 +82,12 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     } else {
         angle_error = 0.0f;
     }
+
+    foc_state_t pll_satus = SMO_PLL_loss(motor);// 检测PLL锁相环的失锁
+    if(pll_satus != FOC_PLL_OK) 
+    {
+        return pll_satus;
+    }
     
     // pll锁相环
     motor->pi_pll.integral += angle_error * PLL_KI * dt;
@@ -106,5 +114,40 @@ void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     motor->speed = motor->speed_observer * 60.0f / _2_PI_POLE_PAIRS;
 
     #endif // FOC_PLL_ENABLE
+
+    return smo_satus;
+}
+
+foc_state_t SMO_PLL_loss(foc_handle_t *motor)
+{
+    uint8_t speed_high =
+        motor->close_cnt >= 500 &&
+        fabsf(motor->speed_ramp_target) > 800.0f;
+    float e_expected =
+        fabsf(motor->speed_ramp_target) *
+        _2_PI * POLE_PAIRS / 60.0f *
+        MOTOR_PSI_F;
+    uint8_t bemf_lost = motor->e_amp < fmaxf(0.5f, 0.25f * e_expected);
+    uint8_t smo_saturated = smo_sat_ratio > 0.90f;
+
+    uint8_t pll_loss = speed_high && (bemf_lost || smo_saturated);
+
+    if(pll_loss)
+    {
+        motor->Pll_Err_cnt++;
+        if(motor->Pll_Err_cnt > 50)
+        {
+            FOC_Trip(motor, 0);
+            pll_loss = 0;
+            motor->Pll_Err_cnt = 0;
+            return FOC_ERR_PLL_LOSS;
+        }
+    }
+    else
+    {
+        motor->Pll_Err_cnt = 0;
+    }
+
+    return FOC_PLL_OK;
 }
 

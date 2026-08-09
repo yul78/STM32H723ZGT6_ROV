@@ -32,6 +32,8 @@ typedef enum {
 typedef enum
 {
     FOC_OK = 0,                 // 正常
+    FOC_PLL_OK,                 // 锁相环正常锁成功
+    FOC_SMO_OK,                 // 滑膜观测器正常
     FOC_ERR_LOOP,               // 循环中断
     FOC_ERR_NOT_INIT,           // 尚未初始化
     FOC_ERR_OVERCURRENT,        // 过流
@@ -40,6 +42,7 @@ typedef enum
     FOC_ERR_ENCODER,            // 编码器错误
     FOC_ERR_HAL_NULL,           // HAL模块为空
     FOC_ERR_INVALID_PARAM,      // 无效参数
+    FOC_ERR_PLL_LOSS            // pll锁相环失锁
 }foc_state_t;
 
 typedef struct
@@ -123,6 +126,7 @@ typedef struct
     foc_pid_t               pi_q;               // q轴电流PI
     foc_pid_t               pi_speed;           // 速度PI
     foc_pid_t               pi_pll;             // 锁相环PI
+    uint16_t                Pll_Err_cnt;     // 锁相环失锁计数
 
     uint16_t                i_adc_u;            // adc得到的三相电流
     uint16_t                i_adc_v;            // adc得到的三相电流

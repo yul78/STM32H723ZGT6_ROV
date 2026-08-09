@@ -181,7 +181,27 @@ int main(void)
   while (1)
   {
     // Print2_Motor_To_VOFA((FOC_Motor[2].u_dq.q - FOC_Motor[2].pi_q.feedback * MOTOR_R) / FOC_Motor[2].speed_observer, FOC_Motor[2].speed);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].i_adc_u, FOC_Motor[2].i_adc_v, FOC_Motor[2].i_adc_w);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_uvw.u, FOC_Motor[2].i_uvw.v, FOC_Motor[2].i_uvw.w);
+    // Print4_Motor_To_VOFA(
+    // FOC_Motor[2].speed,
+    // FOC_Motor[2].pi_q.target,
+    // FOC_Motor[2].i_dq.q,
+    // FOC_Motor[2].u_dq.q);
+    // Print4_Motor_To_VOFA(
+    // FOC_Motor[2].i_dq.d,
+    // FOC_Motor[2].i_dq.q,
+    // angle_error,
+    // FOC_Motor[2].e_amp);
+    Print4_Motor_To_VOFA(
+    FOC_Motor[2].speed,
+    FOC_Motor[2].mode,
+    smo_sat_ratio,
+    sqrtf(
+        (FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha) *
+        (FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha) +
+        (FOC_Motor[2].i_ab_hat.beta - FOC_Motor[2].i_ab.beta) *
+        (FOC_Motor[2].i_ab_hat.beta - FOC_Motor[2].i_ab.beta)));
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab.beta);
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab_hat.alpha);
     // Print2_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].u_dq.d);
@@ -202,7 +222,7 @@ int main(void)
     //   FOC_Motor[2].u_dq.q, 
     //   FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
 
-    Print3_Motor_To_VOFA(V_scale, smo_sat_ratio, FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
+    // Print3_Motor_To_VOFA(V_scale, smo_sat_ratio, FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
 
     // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].mode, sqrt(FOC_Motor[2].u_dq.d + FOC_Motor[2].u_dq.q));
     // Print3_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target);

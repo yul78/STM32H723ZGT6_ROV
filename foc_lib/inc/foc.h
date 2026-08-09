@@ -24,7 +24,7 @@ foc_state_t Foc_Open_Loop_Test(foc_handle_t *motor, float dt);
 foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt);
 foc_state_t Foc_Stop(uint8_t motor_num);
 foc_state_t Foc_Set_Speed(uint8_t motor_num, float speed);
-static void FOC_Trip(foc_handle_t *motor, uint32_t fault);
+void FOC_Trip(foc_handle_t *motor, uint32_t fault);
 
 
 #ifdef __cplusplus
