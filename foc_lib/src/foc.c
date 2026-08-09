@@ -432,6 +432,28 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     // 4. MRAS观测器推算转子位置，得到电角度和转速
     SMO_Observer(motor, dt, MOTOR_STATE_CLOSE);
 
+    float i_observer_err = sqrtf(
+    (motor->i_ab.alpha - motor->i_ab_hat.alpha) *
+    (motor->i_ab.alpha - motor->i_ab_hat.alpha) +
+    (motor->i_ab.beta - motor->i_ab_hat.beta) *
+    (motor->i_ab.beta - motor->i_ab_hat.beta));
+
+    static uint16_t pll_err_cnt = 0;
+    if(fabs(motor->e_amp) < 1.0f && fabs(angle_error) > 0.5f && i_observer_err > 1.0f) // pll失锁保护
+    {
+        pll_err_cnt++;
+        if(pll_err_cnt > 5)
+        {
+            FOC_Trip(motor, 0);
+            pll_err_cnt = 0;
+            return FOC_ERR_LOOP;
+        }
+    }
+    else 
+    {
+        pll_err_cnt = 0;
+    }
+
     float control_theta = motor->theta;
     control_theta = fmodf(control_theta, _2_PI);
     if (control_theta < 0)
@@ -574,6 +596,23 @@ foc_state_t Foc_Stop(uint8_t motor_num)
     motor->target_speed = 0;
     motor->hal.drv_disable(motor_num); // 驱动失能
     return FOC_OK;
+}
+
+static void FOC_Trip(foc_handle_t *motor, uint32_t fault)
+{
+    motor->fault_flags |= fault;
+    motor->target_speed = 0.0f;
+    motor->pi_d.target = 0.0f;
+    motor->pi_q.target = 0.0f;
+
+    motor->pi_pll.integral = 0.0f;
+    motor->pi_d.integral = 0.0f;
+    motor->pi_q.integral = 0.0f;
+    motor->pi_speed.integral = 0.0f;
+
+    motor->hal.pwm_disable(motor->num);  // 清除TIMx MOE
+    motor->hal.drv_disable(motor->num);  // 拉低BTN7960 EN
+    motor->mode = MOTOR_STATE_FAULT;
 }
 
 /**

@@ -29,7 +29,7 @@ SMO_K / SAT_BOUNDARY < 4.27 V/A
 // PWM参数
 #define PWM_ARR                 5500.0f         // 自动重载值
 #define PWM_SCALE               3.3f            // ADC参考电压
-#define PWM_VBUS                12.3f           // VBUS母线电压
+#define PWM_VBUS                16.0f           // VBUS母线电压
 #define ADC_RESOLUTION          65535.0f        // 16位ADC分辨率
 // #define TS                      0.0001176f     // 采样时间间隔
 #define TS                      0.00004f     // 采样时间间隔

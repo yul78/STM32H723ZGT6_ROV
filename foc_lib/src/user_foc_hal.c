@@ -102,6 +102,15 @@ static void foc_hal_pwm_enable(uint8_t num)
     }
 }
 
+static void foc_hal_pwm_disable(uint8_t num)
+{
+    switch(num)
+    {
+        case 1: __HAL_TIM_MOE_DISABLE(&htim8); break; // 启动PWM输出
+        case 2: __HAL_TIM_MOE_DISABLE(&htim1); break; // 启动PWM输出
+    }
+}
+
 static void foc_hal_drive_init(uint8_t num)
 {
     switch(num)

@@ -201,10 +201,12 @@ int main(void)
     //   FOC_Motor[2].u_dq.q, 
     //   FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
 
+    Print3_Motor_To_VOFA(FOC_Motor[2].e_amp, angle_error, FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha);
+
     // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].mode, sqrt(FOC_Motor[2].u_dq.d + FOC_Motor[2].u_dq.q));
     // Print3_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target);
     // Print3_Motor_To_VOFA(FOC_Motor[2].theta_Observer, FOC_Motor[2].theta, FOC_Motor[2].pi_q.target);
-    Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.target, FOC_Motor[2].pi_q.output);
+    // Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.d, FOC_Motor[2].pi_d.target, FOC_Motor[2].pi_d.output);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_dq.d, FOC_Motor[2].pi_d.target, FOC_Motor[2].pi_d.output);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_adc_u, FOC_Motor[2].i_uvw.u, FOC_Motor[2].pi_q.target);
     // Print3_Motor_To_VOFA(FOC_Motor[2].i_ab_hat.alpha, FOC_Motor[2].i_ab_hat.beta, angle_error);

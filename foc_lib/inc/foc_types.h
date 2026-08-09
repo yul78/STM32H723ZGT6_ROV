@@ -22,10 +22,11 @@ extern "C" {
 
 /************************* 数据结构定义 *************************/
 typedef enum {
-    MOTOR_STATE_IDLE = 0,  // ← 新增：空闲/停机等待
-    MOTOR_STATE_ALIGN, // 转子定位
-    MOTOR_STATE_OPEN,      // 开环强拉
-    MOTOR_STATE_CLOSE      // 闭环运行
+    MOTOR_STATE_IDLE = 0,   // 空闲/停机等待
+    MOTOR_STATE_ALIGN,      // 转子定位
+    MOTOR_STATE_OPEN,       // 开环强拉
+    MOTOR_STATE_CLOSE,      // 闭环运行
+    MOTOR_STATE_FAULT
 } foc_mode_t;
 
 typedef enum
@@ -98,6 +99,7 @@ typedef struct
     foc_hal_t               hal;
     foc_state_t             state;              // 运行状态
     uint8_t                 num;                // 电机编号
+    uint32_t                fault_flags;        // 错误标志位
 
     foc_mode_t              mode;               // 运行模式
     foc_motor_params_t      motor;              // 电机参数
