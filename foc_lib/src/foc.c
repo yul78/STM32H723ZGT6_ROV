@@ -271,8 +271,19 @@ foc_state_t Foc_Loop(uint8_t motor_num)
                 break;
             }
         }
-        Foc_Close_Loop(motor, TS);
+        foc_state_t reault =  Foc_Close_Loop(motor, TS);
+
+        if(reault != FOC_OK)
+        {
+            return reault;
+        }
+
         motor->mode = MOTOR_STATE_CLOSE;
+        break;
+
+    case MOTOR_STATE_FAULT:
+        motor->hal.pwm_disable(motor_num);
+        motor->hal.drv_disable(motor_num);
         break;
     }
     return FOC_OK;
@@ -439,10 +450,20 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     (motor->i_ab.beta - motor->i_ab_hat.beta));
 
     static uint16_t pll_err_cnt = 0;
-    if(fabs(motor->e_amp) < 1.0f && fabs(angle_error) > 0.5f && i_observer_err > 1.0f) // pll失锁保护
+    float e_expected = fabsf(motor->speed_ramp_target)
+                    * _2_PI * POLE_PAIRS / 60.0f
+                    * MOTOR_PSI_F;
+
+    uint8_t pll_loss =
+        motor->close_cnt > 500 &&                 // 闭环稳定20ms后才检查
+        fabsf(motor->speed_ramp_target) > 800.0f &&
+        motor->e_amp < fmaxf(0.3f, 0.25f * e_expected) &&
+        i_observer_err > 1.0f;
+        
+    if(pll_loss) // pll失锁保护
     {
         pll_err_cnt++;
-        if(pll_err_cnt > 5)
+        if(pll_err_cnt > 50)
         {
             FOC_Trip(motor, 0);
             pll_err_cnt = 0;
