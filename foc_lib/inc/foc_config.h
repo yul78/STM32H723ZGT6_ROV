@@ -8,9 +8,9 @@ extern "C" {
 #endif
 
 
-// #define ONLY_OPEN_LOOP
-#define FOC_SPEED_CONTROL
+#define FOC_CLOSE_ENABLE
 // #define FOC_CLOSE_I_DEBUG
+#define FOC_SPEED_CONTROL
 #define FOC_PLL_ENABLE                      // 使能锁相环
 // #define FW_ENABLE                           // 使能弱磁
 

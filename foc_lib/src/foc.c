@@ -201,7 +201,7 @@ foc_state_t Foc_Loop(uint8_t motor_num)
 
         motor->state_timer++;
 
-        #ifndef ONLY_OPEN_LOOP
+        #ifdef FOC_CLOSE_ENABLE
         // 观测速度与开环速度接近才切换
         float speed_rpm = motor->speed_observer * 60.0f / _2_PI_POLE_PAIRS; // 把电角速度转换为圈每秒
         float speed_diff = fabsf(fabsf(speed_rpm) - fabsf(OPEN_LOOP_SPEED_RPM));
