@@ -222,13 +222,16 @@ foc_state_t Foc_Loop(uint8_t motor_num)
             } 
             else
             {
-                motor->speed_ramp_target = fabsf(motor->speed_observer) * 60.0f / (_2_PI * POLE_PAIRS) + 50.0f;
+                motor->speed_ramp_target = fabsf(motor->speed_observer) * 60.0f / (_2_PI * POLE_PAIRS) - 50.0f;
                 motor->speed_ramp_target = -motor->speed_ramp_target;
                 // motor->pi_pll.integral = -OPEN_ELEC_SPEED;
             }
 
             float pi_iq_hold = motor->i_dq.q;
-            motor->pi_speed.integral = 0.22f; // 初始驱动力
+            if(motor->target_speed > 0)
+                motor->pi_speed.integral = 0.22f; // 初始驱动力
+            else
+                motor->pi_speed.integral = -0.22f;
             motor->pi_speed.output = pi_iq_hold;
                 
             motor->theta_Observer = motor->theta;

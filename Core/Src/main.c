@@ -288,7 +288,7 @@ int main(void)
     //                  FOC_Motor[2].speed,          // 转速
     //                  FOC_Motor[2].fw_active);     // 弱磁是否激活
 
-    Foc_Set_Speed(2, 3000);
+    Foc_Set_Speed(2, 2000);
     // Foc_Set_Speed(1, 50);
     // Print2_Motor_To_VOFA((float)adc2_buf[0], (float)adc1_buf[1]);
     // 速度环调试需要看4个量

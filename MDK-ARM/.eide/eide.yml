@@ -2,9 +2,8 @@ version: "4.1"
 name: Brushless_Motor_Drive
 type: ARM
 deviceName: null
-packDir: .pack/Keil/STM32H7xx_DFP.4.1.0
-srcDirs:
-  - ../foc_lib
+packDir: null
+srcDirs: []
 virtualFolder:
   name: <virtual_root>
   files: []
@@ -75,6 +74,8 @@ virtualFolder:
         - path: ../foc_lib/inc/foc_types.h
         - path: ../foc_lib/inc/foc_utils.h
         - path: ../foc_lib/inc/smo.h
+        - path: ../foc_lib/src/field_weakening.c
+        - path: ../foc_lib/inc/field_weakening.h
       folders: []
     - name: ::CMSIS
       files: []
@@ -82,7 +83,7 @@ virtualFolder:
 dependenceList: []
 outDir: build
 miscInfo:
-  uid: 34c28b789e88685cedf5e01b1f79506e
+  uid: 034b92fd6952559a569ef3a9d70ac5dc
 targets:
   Brushless_Motor_Drive:
     cppPreprocessAttrs:
@@ -91,7 +92,6 @@ targets:
         - USE_HAL_DRIVER
         - STM32H723xx
       incList:
-        - .
         - ../Core/Inc
         - ../Drivers/STM32H7xx_HAL_Driver/Inc
         - ../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
@@ -220,11 +220,6 @@ targets:
         otherCmds: ""
         proType: 1
         speed: 8000
-      OpenOCD:
-        baseAddr: "0x08000000"
-        bin: ""
-        interface: cmsis-dap
-        target: stm32h7x
       STLink:
         address: "0x8000000"
         bin: ""
@@ -235,6 +230,13 @@ targets:
         resetMode: default
         runAfterProgram: true
         speed: 4000
+      pyOCD:
+        baseAddr: "0x08000000"
+        bin: ""
+        config: .eide/brushless_motor_drive.pyocd.yaml
+        otherCmds: ""
+        speed: 4M
+        targetName: cortex_m
     uploader: STLink
   Project:
     cppPreprocessAttrs:
@@ -252,16 +254,10 @@ targets:
         - ../UserCode/BSP
         - ../UserCode/MID
         - ../UserCode/foc_lib/inc
-        - ../Middlewares/Third_Party/FreeRTOS/Source/include
-        - ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
-        - ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F
-        - ../Drivers/CMSIS/RTOS2/Include
         - .cmsis/include
         - RTE/_Project
-        - ../foc_lib/inc
       libList: []
-    excludeList:
-      - <virtual_root>/foc_lib
+    excludeList: []
     settings:
       debugger: cortex-debug
     toolchain: AC5
@@ -378,19 +374,4 @@ targets:
         otherCmds: ""
         proType: 1
         speed: 8000
-      OpenOCD:
-        baseAddr: "0x08000000"
-        bin: ""
-        interface: cmsis-dap
-        target: stm32h7x
-      STLink:
-        address: "0x8000000"
-        bin: ""
-        elFile: None
-        optionBytes: .eide/project.st.option.bytes.ini
-        otherCmds: ""
-        proType: SWD
-        resetMode: default
-        runAfterProgram: true
-        speed: 4000
-    uploader: STLink
+    uploader: JLink
