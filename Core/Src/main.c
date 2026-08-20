@@ -112,11 +112,11 @@ void Print4_Motor_To_VOFA(float data1, float data2, float data3, float data4)
     HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
 }
 
-void Print6_Motor_To_VOFA(float data1, float data2, float data3, float data4, float data5, float data6)
+void Print5_Motor_To_VOFA(float data1, float data2, float data3, float data4, float data5)
 {
-    char uart_buf[256 * 3]; // 足够长以容纳三个数据
+    char uart_buf[256 * 4]; // 足够长以容纳三个数据
     // 使用逗号分隔，结尾加换行，VOFA 的 FireWater 协议才能正确识别成一帧
-    int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f, %.3f,%.3f\n", data1, data2, data3, data4, data5, data6);
+    int len = sprintf(uart_buf, "%.3f,%.3f,%.3f,%.3f, %.3f,%.3f\n", data1, data2, data3, data4, data5);
     
     // 一次性发送，不要分段发送逗号和换行
     HAL_UART_Transmit(&huart10, (uint8_t *)uart_buf, len, 10);
@@ -193,15 +193,15 @@ int main(void)
     // FOC_Motor[2].i_dq.q,
     // angle_error,
     // FOC_Motor[2].e_amp);
-    Print4_Motor_To_VOFA(
-    FOC_Motor[2].speed,
-    FOC_Motor[2].mode,
-    smo_sat_ratio,
-    sqrtf(
-        (FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha) *
-        (FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha) +
-        (FOC_Motor[2].i_ab_hat.beta - FOC_Motor[2].i_ab.beta) *
-        (FOC_Motor[2].i_ab_hat.beta - FOC_Motor[2].i_ab.beta)));
+    // Print4_Motor_To_VOFA(
+    // FOC_Motor[2].speed,
+    // FOC_Motor[2].e_amp,
+    // smo_sat_ratio,
+    // sqrtf(
+    //     (FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha) *
+    //     (FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha) +
+    //     (FOC_Motor[2].i_ab_hat.beta - FOC_Motor[2].i_ab.beta) *
+    //     (FOC_Motor[2].i_ab_hat.beta - FOC_Motor[2].i_ab.beta)));
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab.beta);
     // Print2_Motor_To_VOFA(FOC_Motor[2].i_ab.alpha, FOC_Motor[2].i_ab_hat.alpha);
     // Print2_Motor_To_VOFA(FOC_Motor[2].u_dq.q, FOC_Motor[2].u_dq.d);
@@ -209,6 +209,35 @@ int main(void)
     // Print2_Motor_To_VOFA(FOC_Motor[2].e_ab.alpha, FOC_Motor[2].e_ab.beta);
     // Print3_Motor_To_VOFA(FOC_Motor[2].e_ab.alpha, FOC_Motor[2].e_ab.beta, sqrt(FOC_Motor[2].e_ab.alpha * FOC_Motor[2].e_ab.alpha + FOC_Motor[2].e_ab.beta * FOC_Motor[2].e_ab.beta));
     // Print3_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, angle_error);
+    // Print4_Motor_To_VOFA(FOC_Motor[2].i_ab_hat.alpha - FOC_Motor[2].i_ab.alpha, smo_sat_ratio, angle_error, FOC_Motor[2].e_amp);
+    // Print4_Motor_To_VOFA(
+    // FOC_Motor[2].speed,
+    // FOC_Motor[2].i_dq.d,
+    // FOC_Motor[2].i_dq.q,
+    // angle_error);
+    // Print4_Motor_To_VOFA(
+    // FOC_Motor[2].target_speed,
+    // FOC_Motor[2].speed,
+    // FOC_Motor[2].pi_q.feedback,
+    // FOC_Motor[2].pi_q.output);
+
+    float e_expected = fabsf(FOC_Motor[2].speed_ramp_target) *
+                   _2_PI * POLE_PAIRS / 60.0f * MOTOR_PSI_F;
+    float e_threshold = fmaxf(0.5f, 0.25f * e_expected);
+
+  //   Print4_Motor_To_VOFA(
+  //     FOC_Motor[2].speed,
+  //     FOC_Motor[2].e_amp,
+  //     angle_error,
+  //     V_scale
+  // );
+
+  Print4_Motor_To_VOFA(
+    FOC_Motor[2].speed,
+    FOC_Motor[2].e_amp,
+    angle_error,
+    calc_compensation_angle(FOC_Motor[2].speed_observer)
+);
     // Print4_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed_observer, angle_error);
     // Print4_Motor_To_VOFA(FOC_Motor[2].i_dq.d, FOC_Motor[2].i_dq.q, FOC_Motor[2].pi_q.output, FOC_Motor[2].speed);
     // Print3_Motor_To_VOFA(FOC_Motor[2].speed, FOC_Motor[2].speed_observer, angle_error);
@@ -259,7 +288,7 @@ int main(void)
     //                  FOC_Motor[2].speed,          // 转速
     //                  FOC_Motor[2].fw_active);     // 弱磁是否激活
 
-    Foc_Set_Speed(2, 5000);
+    Foc_Set_Speed(2, 3000);
     // Foc_Set_Speed(1, 50);
     // Print2_Motor_To_VOFA((float)adc2_buf[0], (float)adc1_buf[1]);
     // 速度环调试需要看4个量

@@ -59,7 +59,7 @@ foc_state_t SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     // ===== 第5步：PLL=====
     #ifdef FOC_PLL_ENABLE
 
-    float theta_comp = motor->theta_Observer - calc_compensation_angle(motor->speed_observer);
+    float theta_comp = motor->theta_Observer - SMO_COMP_GAIN * calc_compensation_angle(motor->speed_observer);
     // float theta_comp = motor->theta_Observer;
 
     float cos_obs = cosf(theta_comp);

@@ -1,9 +1,12 @@
 {
     "folders": [
         {
-            "path": "."
+            "path": ".."
         }
     ],
-    "settings": {},
+    "settings": {
+        "C_Cpp.default.configurationProvider": "",
+        "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json"
+    },
     "extensions": {}
 }

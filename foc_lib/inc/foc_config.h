@@ -41,6 +41,7 @@ SMO_K / SAT_BOUNDARY < 4.27 V/A
 // 观测器参数   
 #define SMO_K                   8.0f            // 滑模增益 (根据实际效果调试)
 #define SPEED_OBSERBER_LPF      0.1f           // 观测器求得的速度的低通滤波系数
+#define SMO_COMP_GAIN           0.4f           // 滑模动态相位补偿增益
 #define OB_SPEED_LIMIT          10000.0f         // 观测速度限幅
 #define PLL_INIT_LIMIT          1500.0f         // PLL积分限幅4,673.521850899743
 #define SAT_BOUNDARY            4.0f            // sat函数饱和边界   

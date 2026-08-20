@@ -1,16 +1,17 @@
 {
     "folders": [
         {
-            "path": "."
+            "path": ".."
         }
     ],
     "settings": {
         "terminal.integrated.shellIntegration.enabled": false,
+        "C_Cpp.default.configurationProvider": "",
+        "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
         "clangd.arguments": [
             "--header-insertion=never"
         ],
         "files.autoGuessEncoding": true,
-        "C_Cpp.default.configurationProvider": "cl.eide",
         "C_Cpp.errorSquiggles": "disabled",
         "files.associations": {
             ".eideignore": "ignore",

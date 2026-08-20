@@ -72,7 +72,7 @@ float calc_compensation_angle(float omega_e_est)
     float comp = atanf(fe / fc);
     
     // 加上数字延迟（可选，通常较小）
-    // comp += 1.5f * _2_PI * fe * TS; // 1.5是指1.5个周期的延迟
+    comp += 1.5f * _2_PI * fe * TS; // 1.5是指1.5个周期的延迟
     
     // 方向：正转加，反转减
     if (omega_e_est < 0) comp = -comp;

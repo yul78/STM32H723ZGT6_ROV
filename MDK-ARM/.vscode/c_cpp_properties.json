@@ -1,0 +1,36 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "STM32H723-MDK",
+            "defines": [
+                "USE_PWR_LDO_SUPPLY",
+                "USE_HAL_DRIVER",
+                "STM32H723xx"
+            ],
+            "includePath": [
+                "../Core/Inc",
+                "../Drivers/STM32H7xx_HAL_Driver/Inc",
+                "../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy",
+                "../Drivers/CMSIS/Device/ST/STM32H7xx/Include",
+                "../Drivers/CMSIS/Include",
+                "../foc_lib/inc",
+                "../foc_lib/src"
+            ],
+            "browse": {
+                "path": [
+                    "../Core/Inc",
+                    "../Drivers/STM32H7xx_HAL_Driver/Inc",
+                    "../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy",
+                    "../Drivers/CMSIS/Device/ST/STM32H7xx/Include",
+                    "../Drivers/CMSIS/Include",
+                    "../foc_lib/inc",
+                    "../foc_lib/src"
+                ]
+            },
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ]
+}

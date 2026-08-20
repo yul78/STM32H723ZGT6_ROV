@@ -2,7 +2,7 @@ version: "4.1"
 name: Brushless_Motor_Drive
 type: ARM
 deviceName: null
-packDir: null
+packDir: .pack/Keil/STM32H7xx_DFP.4.1.0
 srcDirs:
   - ../foc_lib
 virtualFolder:
@@ -91,6 +91,7 @@ targets:
         - USE_HAL_DRIVER
         - STM32H723xx
       incList:
+        - .
         - ../Core/Inc
         - ../Drivers/STM32H7xx_HAL_Driver/Inc
         - ../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy

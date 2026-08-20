@@ -11,6 +11,7 @@ brushless_motor_drive\stm32h7xx_hal_pwr.o: ../Drivers/CMSIS/Include/cmsis_versio
 brushless_motor_drive\stm32h7xx_hal_pwr.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 brushless_motor_drive\stm32h7xx_hal_pwr.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 brushless_motor_drive\stm32h7xx_hal_pwr.o: ../Drivers/CMSIS/Include/mpu_armv7.h
+brushless_motor_drive\stm32h7xx_hal_pwr.o: ../Drivers/CMSIS/Include/cachel1_armv7.h
 brushless_motor_drive\stm32h7xx_hal_pwr.o: ../Drivers/CMSIS/Device/ST/STM32H7xx/Include/system_stm32h7xx.h
 brushless_motor_drive\stm32h7xx_hal_pwr.o: ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h
 brushless_motor_drive\stm32h7xx_hal_pwr.o: ../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h

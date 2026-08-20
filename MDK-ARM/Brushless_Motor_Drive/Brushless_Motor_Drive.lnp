@@ -35,6 +35,7 @@
 "brushless_motor_drive\foc_math.o"
 "brushless_motor_drive\smo.o"
 "brushless_motor_drive\user_foc_hal.o"
+"brushless_motor_drive\field_weakening.o"
 --strict --scatter "Brushless_Motor_Drive\Brushless_Motor_Drive.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
