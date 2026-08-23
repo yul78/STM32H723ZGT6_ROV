@@ -102,6 +102,15 @@ static void foc_hal_pwm_enable(uint8_t num)
     }
 }
 
+static void foc_hal_pwm_disable(uint8_t num)
+{
+    switch(num)
+    {
+        case 1: __HAL_TIM_MOE_DISABLE(&htim8); break; // 启动PWM输出
+        case 2: __HAL_TIM_MOE_DISABLE(&htim1); break; // 启动PWM输出
+    }
+}
+
 static void foc_hal_drive_init(uint8_t num)
 {
     switch(num)
@@ -142,6 +151,7 @@ static void foc_hal_adc_get_value(uint8_t num, uint16_t *adc_u, uint16_t *adc_v,
 const foc_hal_t foc_hal =
 {
     .pwm_enable = foc_hal_pwm_enable,
+    .pwm_disable = foc_hal_pwm_disable,
     .pwm_start = foc_hal_tim_start,
     .pwm_set_duty = foc_hal_set_duty,
     .drv_enable = foc_hal_drive_init,

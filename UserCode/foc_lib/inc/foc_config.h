@@ -8,38 +8,57 @@ extern "C" {
 #endif
 
 
-// #define ONLY_OPEN_LOOP
-#define FOC_SPEED_CONTROL
+#define FOC_CLOSE_ENABLE
 // #define FOC_CLOSE_I_DEBUG
-#define FOC_PLL_ENABLE
+#define FOC_SPEED_CONTROL
+#define FOC_PLL_ENABLE                      // 使能锁相环
+// #define FW_ENABLE                           // 使能弱磁
+
+/*
+在饱和边界内部，离散误差极点近似为：
+1 - (R + SMO_K/SAT_BOUNDARY)·dt/L
+= 1 - (0.2223 + 5) × 0.4455
+≈ -1.326
+绝对值大于1，意味着当前 SMO_K=4、SAT_BOUNDARY=0.8、25kHz 的组合在边界层内理论上可能产生离散振荡或明显抖振。直接再减一个误差会让情况更严重。
+以当前40µs周期，稳定条件近似要求：
+SMO_K / SAT_BOUNDARY < 2L/dt - R
+SMO_K / SAT_BOUNDARY < 4.27 V/A
+*/
 
 
 // PWM参数
 #define PWM_ARR                 5500.0f         // 自动重载值
 #define PWM_SCALE               3.3f            // ADC参考电压
-#define PWM_VBUS                12.4f           // VBUS母线电压
+#define PWM_VBUS                16.0f           // VBUS母线电压
 #define ADC_RESOLUTION          65535.0f        // 16位ADC分辨率
 // #define TS                      0.0001176f     // 采样时间间隔
-#define TS                      0.00008f     // 采样时间间隔
+#define TS                      0.00004f     // 采样时间间隔
 
 // INA240参数   
 #define INA240_GAIN             50.0f           // INA240A2增益50V/V
 #define SAMPLE_RESISTOR         0.00148f        // 采样电阻A1mΩ
 
 // 观测器参数   
-#define SMO_K                   4.0f            // 滑模增益 (根据实际效果调试)
-#define BEMF_LPF                0.1f           // 反电动势低通滤波系数
+#define SMO_K                   8.0f            // 滑模增益 (根据实际效果调试)
 #define SPEED_OBSERBER_LPF      0.1f           // 观测器求得的速度的低通滤波系数
-#define COMP                    0.0f            // 偏移量
+#define SMO_COMP_GAIN           0.4f           // 滑模动态相位补偿增益
 #define OB_SPEED_LIMIT          10000.0f         // 观测速度限幅
 #define PLL_INIT_LIMIT          1500.0f         // PLL积分限幅4,673.521850899743
-#define SAT_BOUNDARY            0.8f            // sat函数饱和边界   
+#define SAT_BOUNDARY            4.0f            // sat函数饱和边界   
+
+// ===== 弱磁控制参数 =====
+#define CURRENT_PI_LIMIT        6.801f      // 电流环电压输出限幅（V），与PI limit一致
+#define FW_VOLTAGE_THRESHOLD    0.92f       // 触发弱磁的电压利用率（建议0.93~0.97）
+#define FW_KI                   1.0f       // 弱磁积分增益（越大响应越快，但可能振荡）
+#define FW_EXIT_RATE            0.3f        // 退出弱磁时id恢复速率倍数（相对FW_KI）
+#define FW_ID_MAX               8.0f        // 最大弱磁电流限幅（A），不超过 CURRENT_LIMIT/2
 
 // 电机通用参数（根据电机修改）
 #define POLE_PAIRS              7.0f            // 电机极对数（示例：7对极）
 #define CURRENT_LIMIT           20.0f           // 最大相电流(A)
 #define MOTOR_R                 0.222261666f      // 相电阻 (Ohm)
 #define MOTOR_L                 0.0000897929f   // 相电感 (Henry)
+#define MOTOR_PSI_F             0.002f          // 电机磁链
 #define MAX_MOTOR_NUM           2               // 最大电机数量
 
 // PLL参数
@@ -48,20 +67,13 @@ extern "C" {
 #define BTN7960_DEAD_TIME_S     0.0000005f 
 
 // 电流环参数
-#define PI_KP_D                 0.56418f 
-#define PI_KI_D                 1396.511f   
-#define PI_KP_Q                 0.56418f 
-#define PI_KI_Q                 1396.511f
-// #define PI_KP_D                 0.11224f 
-// #define PI_KI_D                 277.827f   
-// #define PI_KP_Q                 0.11224f 
-// #define PI_KI_Q                 277.827f
-// #define PI_KP_D                 0.564f    // 2π*带宽*L = 2*3.14*1000*0.00008979
-// #define PI_KI_D                 2472.0f   // R/L = 0.222/0.00008979
-// #define PI_KP_Q                 0.564f 
-// #define PI_KI_Q                 2472.0f
-#define PI_KP_SPEED             0.005f         // 速度PI比例系数
-#define PI_KI_SPEED             0.2f          // 速度PI积分系数
+#define PI_KP_D                 0.282f 
+#define PI_KI_D                 696.511f   
+#define PI_KP_Q                 0.282f 
+#define PI_KI_Q                 696.511f
+
+#define PI_KP_SPEED             0.0005f         // 速度PI比例系数
+#define PI_KI_SPEED             0.007f          // 速度PI积分系数
 #define PI_LIMIT_SPEED          14.0f           // 速度PI输出限幅
 
 // 速度定义（分离开环和闭环）

@@ -22,15 +22,18 @@ extern "C" {
 
 /************************* 数据结构定义 *************************/
 typedef enum {
-    MOTOR_STATE_IDLE = 0,  // ← 新增：空闲/停机等待
-    MOTOR_STATE_ALIGN, // 转子定位
-    MOTOR_STATE_OPEN,      // 开环强拉
-    MOTOR_STATE_CLOSE      // 闭环运行
+    MOTOR_STATE_IDLE = 0,   // 空闲/停机等待
+    MOTOR_STATE_ALIGN,      // 转子定位
+    MOTOR_STATE_OPEN,       // 开环强拉
+    MOTOR_STATE_CLOSE,      // 闭环运行
+    MOTOR_STATE_FAULT
 } foc_mode_t;
 
 typedef enum
 {
     FOC_OK = 0,                 // 正常
+    FOC_PLL_OK,                 // 锁相环正常锁成功
+    FOC_SMO_OK,                 // 滑膜观测器正常
     FOC_ERR_LOOP,               // 循环中断
     FOC_ERR_NOT_INIT,           // 尚未初始化
     FOC_ERR_OVERCURRENT,        // 过流
@@ -39,6 +42,7 @@ typedef enum
     FOC_ERR_ENCODER,            // 编码器错误
     FOC_ERR_HAL_NULL,           // HAL模块为空
     FOC_ERR_INVALID_PARAM,      // 无效参数
+    FOC_ERR_PLL_LOSS            // pll锁相环失锁
 }foc_state_t;
 
 typedef struct
@@ -98,6 +102,7 @@ typedef struct
     foc_hal_t               hal;
     foc_state_t             state;              // 运行状态
     uint8_t                 num;                // 电机编号
+    uint32_t                fault_flags;        // 错误标志位
 
     foc_mode_t              mode;               // 运行模式
     foc_motor_params_t      motor;              // 电机参数
@@ -114,11 +119,14 @@ typedef struct
     foc_ab_t                i_ab_hat;           // 估计的电流
     foc_dq_t                u_dq;               // q轴和d轴电压
 
+    float                   e_amp;              // 反电动势幅值
+
     /*pid参数*/     
     foc_pid_t               pi_d;               // d轴电流PI
     foc_pid_t               pi_q;               // q轴电流PI
     foc_pid_t               pi_speed;           // 速度PI
     foc_pid_t               pi_pll;             // 锁相环PI
+    uint16_t                Pll_Err_cnt;     // 锁相环失锁计数
 
     uint16_t                i_adc_u;            // adc得到的三相电流
     uint16_t                i_adc_v;            // adc得到的三相电流
@@ -127,8 +135,11 @@ typedef struct
     float                   speed;              // 电机转速(rpm)
     float                   theta_Observer;     // 观测器得到的转子电角度(rad)
     float                   theta_obs_prev;     // 上一拍观测角度，用于微分估速
-    float                   speed_observer;     // 观测器得到的电机转速(rpm)
+    float                   speed_observer;     // 观测器得到的电机转速(rad/s)
     float                   speed_sign;         // 电机转子正转还是反转
+
+    float   id_fw;                              // 弱磁注入的负 id（弱磁控制器输出，≤0）
+    float   fw_active;                          // 弱磁激活标志（调试用）
 
     /*目标值*/      
     float                   target_iq;          // q轴电流目标值

@@ -10,8 +10,8 @@ extern "C" {
 #endif
 
 extern float angle_error;
-void BEMF_Observer(foc_handle_t *motor, float dt, foc_mode_t mode);
-void SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode);
+foc_state_t SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode);
+foc_state_t SMO_PLL_loss(foc_handle_t *motor);
 
 #ifdef __cplusplus
 }

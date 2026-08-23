@@ -72,7 +72,7 @@ float calc_compensation_angle(float omega_e_est)
     float comp = atanf(fe / fc);
     
     // 加上数字延迟（可选，通常较小）
-    // comp += 1.5f * _2_PI * fe * TS; // 1.5是指1.5个周期的延迟
+    comp += 1.5f * _2_PI * fe * TS; // 1.5是指1.5个周期的延迟
     
     // 方向：正转加，反转减
     if (omega_e_est < 0) comp = -comp;
@@ -179,7 +179,7 @@ void FOC_SVPWM_Generate(foc_handle_t *motor)
     float Tx = 0.0f, Ty = 0.0f;
     uint8_t sector;
 
-    float k = PWM_ARR / PWM_VBUS;
+    float k = SQRT_3 * PWM_ARR / PWM_VBUS;
     float U1 = u_beta;
     float U2 = -SQRT_3_2 * u_alpha - u_beta / 2.0f;
     float U3 = SQRT_3_2 * u_alpha - u_beta / 2.0f;
