@@ -235,7 +235,7 @@ int main(void)
   Print4_Motor_To_VOFA(
     FOC_Motor[2].speed,
     FOC_Motor[2].e_amp,
-    angle_error,
+    FOC_Motor[2].angle_error,
     calc_compensation_angle(FOC_Motor[2].speed_observer)
 );
     // Print4_Motor_To_VOFA(FOC_Motor[2].theta, FOC_Motor[2].theta_Observer, FOC_Motor[2].speed_observer, angle_error);

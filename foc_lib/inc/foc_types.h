@@ -120,6 +120,8 @@ typedef struct
     foc_dq_t                u_dq;               // q轴和d轴电压
 
     float                   e_amp;              // 反电动势幅值
+    float                   angle_error;        // 角度误差
+    float                   smo_sat_ratio;      // 滑膜限幅比
 
     /*pid参数*/     
     foc_pid_t               pi_d;               // d轴电流PI
