@@ -14,12 +14,6 @@
 foc_handle_t FOC_Motor[MAX_MOTOR_NUM + 1] = {0};
 uint32_t vofa_cnt = 0;
 
-float Vd_raw;
-float Vq_raw;
-float Vd_New;
-float Vq_New;
-float V_scale;
-
 /**
  * @brief foc初始化
  * 
@@ -105,6 +99,8 @@ foc_state_t Foc_ParamInit(foc_handle_t *motor, const foc_hal_t *hal_interface)
     motor->theta = 0.0f; // 确保起始角度从0开始
     motor->speed_ramp_target = 0.0f;
     motor->speed_sign = 1.0;
+    motor->angle_error = 0.0f;
+    motor->smo_sat_ratio = 0.0f;
     motor->state_timer = 0;
     motor->state = FOC_OK;
     return FOC_OK;
@@ -205,7 +201,7 @@ foc_state_t Foc_Loop(uint8_t motor_num)
         // 观测速度与开环速度接近才切换
         float speed_rpm = motor->speed_observer * 60.0f / _2_PI_POLE_PAIRS; // 把电角速度转换为圈每秒
         float speed_diff = fabsf(fabsf(speed_rpm) - fabsf(OPEN_LOOP_SPEED_RPM));
-        if (motor->state_timer > 8500 && speed_diff < OPEN_LOOP_SPEED_RPM * 0.1f && fabs(angle_error) < 0.1f)
+        if (motor->state_timer > 8500 && speed_diff < OPEN_LOOP_SPEED_RPM * 0.1f && fabs(motor->angle_error) < 0.1f)
         {
             motor->pi_pll.integral = motor->target_speed > 0 ? fabsf(motor->speed_observer) : -fabsf(motor->speed_observer);
             motor->pi_d.integral = 0.0f;
@@ -529,21 +525,21 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     float vd_ff = -omega_e * MOTOR_L * motor->i_dq.q; // d轴前馈
     float vq_ff =  omega_e * MOTOR_L * motor->i_dq.d + omega_e * MOTOR_PSI_F; // q轴前馈
 
-    Vd_raw = motor->pi_d.kp * error_d + motor->pi_d.integral + vd_ff;
-    Vq_raw = motor->pi_q.kp * error_q + motor->pi_q.integral + vq_ff;
+    float Vd_raw = motor->pi_d.kp * error_d + motor->pi_d.integral + vd_ff;
+    float Vq_raw = motor->pi_q.kp * error_q + motor->pi_q.integral + vq_ff;
 
     float V_limt = pi_limit;
     float V_mag = sqrtf(Vd_raw * Vd_raw + Vq_raw * Vq_raw);
 
-    Vd_New = Vd_raw;
-    Vq_New = Vq_raw;
+    float Vd_New = Vd_raw;
+    float Vq_New = Vq_raw;
     
-    V_scale = 1.0f;
+    motor->V_scale = 1.0f;
     if(V_mag > V_limt)
     {
-        V_scale = V_limt / V_mag;
-        Vd_New *= V_scale;
-        Vq_New *= V_scale;
+        motor->V_scale = V_limt / V_mag;
+        Vd_New *= motor->V_scale;
+        Vq_New *= motor->V_scale;
     }
 
     float kaw = 0.1f;

@@ -12,9 +12,6 @@
 #include "smo.h"
 #include "foc.h"
 
-float angle_error;
-float smo_sat_ratio;
-
 /**
  * @brief SMO观测器的算法
  * 
@@ -37,7 +34,7 @@ foc_state_t SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     float z_alpha = SMO_K * FOC_sat(err_alpha, SAT_BOUNDARY);
     float z_beta  = SMO_K * FOC_sat(err_beta,  SAT_BOUNDARY);
 
-    smo_sat_ratio = fmaxf(fabsf(z_alpha), fabsf(z_beta)) / SMO_K;
+    motor->smo_sat_ratio = fmaxf(fabsf(z_alpha), fabsf(z_beta)) / SMO_K;
     
     // ===== 第3步：电流观测器迭代 =====
     // Î[k+1] = a·Î[k] + b·(U[k] - Z[k])
@@ -66,8 +63,8 @@ foc_state_t SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     float sin_obs = sinf(theta_comp);
 
     float speed_sign = (motor->speed_observer >= 0.0f) ? 1.0f : -1.0f;
-    angle_error = -motor->e_ab.alpha * cos_obs - motor->e_ab.beta  * sin_obs;
-    angle_error *= speed_sign;
+    motor->angle_error = -motor->e_ab.alpha * cos_obs - motor->e_ab.beta  * sin_obs;
+    motor->angle_error *= speed_sign;
     
     // 归一化：消除转速对增益的影响
     motor->e_amp = sqrtf(motor->e_ab.alpha * motor->e_ab.alpha 
@@ -76,11 +73,11 @@ foc_state_t SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     // 软限幅
     float e_amp_min = 0.5f;
     if (motor->e_amp > e_amp_min) {
-        angle_error /= motor->e_amp;
+        motor->angle_error /= motor->e_amp;
     } else if (motor->e_amp > 0.1f) {
-        angle_error = angle_error / e_amp_min * (motor->e_amp / e_amp_min); // 线性衰减到0
+        motor->angle_error = motor->angle_error / e_amp_min * (motor->e_amp / e_amp_min); // 线性衰减到0
     } else {
-        angle_error = 0.0f;
+        motor->angle_error = 0.0f;
     }
 
     foc_state_t pll_satus = SMO_PLL_loss(motor);// 检测PLL锁相环的失锁
@@ -90,14 +87,14 @@ foc_state_t SMO_Observer(foc_handle_t *motor, float dt, foc_mode_t mode)
     }
     
     // pll锁相环
-    motor->pi_pll.integral += angle_error * PLL_KI * dt;
+    motor->pi_pll.integral += motor->angle_error * PLL_KI * dt;
     
     // 积分限幅
     if(motor->pi_pll.integral >  OB_SPEED_LIMIT) motor->pi_pll.integral =  OB_SPEED_LIMIT;
     if(motor->pi_pll.integral < -OB_SPEED_LIMIT) motor->pi_pll.integral = -OB_SPEED_LIMIT;
     
     // 速度低通滤波
-    float speed_raw = PLL_KP * angle_error + motor->pi_pll.integral;
+    float speed_raw = PLL_KP * motor->angle_error + motor->pi_pll.integral;
     motor->speed_observer += (speed_raw - motor->speed_observer) * SPEED_OBSERBER_LPF;
     
     // 观测器估测速度限幅
@@ -128,7 +125,7 @@ foc_state_t SMO_PLL_loss(foc_handle_t *motor)
         _2_PI * POLE_PAIRS / 60.0f *
         MOTOR_PSI_F;
     uint8_t bemf_lost = motor->e_amp < fmaxf(0.5f, 0.25f * e_expected);
-    uint8_t smo_saturated = smo_sat_ratio > 0.90f;
+    uint8_t smo_saturated = motor->smo_sat_ratio > 0.90f;
 
     uint8_t pll_loss = speed_high && (bemf_lost || smo_saturated);
 

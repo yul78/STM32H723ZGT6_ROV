@@ -118,8 +118,11 @@ typedef struct
     foc_ab_t                e_ab;               // 在观测器中滤波之后的反电动势
     foc_ab_t                i_ab_hat;           // 估计的电流
     foc_dq_t                u_dq;               // q轴和d轴电压
+    float                   V_scale;            
 
     float                   e_amp;              // 反电动势幅值
+    float                   angle_error;        // 角度误差
+    float                   smo_sat_ratio;      // 滑膜限幅比
 
     /*pid参数*/     
     foc_pid_t               pi_d;               // d轴电流PI
