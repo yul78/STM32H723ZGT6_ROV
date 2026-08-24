@@ -14,12 +14,6 @@
 foc_handle_t FOC_Motor[MAX_MOTOR_NUM + 1] = {0};
 uint32_t vofa_cnt = 0;
 
-float Vd_raw;
-float Vq_raw;
-float Vd_New;
-float Vq_New;
-float V_scale;
-
 /**
  * @brief foc初始化
  * 
@@ -531,21 +525,21 @@ foc_state_t Foc_Close_Loop(foc_handle_t *motor, float dt)
     float vd_ff = -omega_e * MOTOR_L * motor->i_dq.q; // d轴前馈
     float vq_ff =  omega_e * MOTOR_L * motor->i_dq.d + omega_e * MOTOR_PSI_F; // q轴前馈
 
-    Vd_raw = motor->pi_d.kp * error_d + motor->pi_d.integral + vd_ff;
-    Vq_raw = motor->pi_q.kp * error_q + motor->pi_q.integral + vq_ff;
+    float Vd_raw = motor->pi_d.kp * error_d + motor->pi_d.integral + vd_ff;
+    float Vq_raw = motor->pi_q.kp * error_q + motor->pi_q.integral + vq_ff;
 
     float V_limt = pi_limit;
     float V_mag = sqrtf(Vd_raw * Vd_raw + Vq_raw * Vq_raw);
 
-    Vd_New = Vd_raw;
-    Vq_New = Vq_raw;
+    float Vd_New = Vd_raw;
+    float Vq_New = Vq_raw;
     
-    V_scale = 1.0f;
+    motor->V_scale = 1.0f;
     if(V_mag > V_limt)
     {
-        V_scale = V_limt / V_mag;
-        Vd_New *= V_scale;
-        Vq_New *= V_scale;
+        motor->V_scale = V_limt / V_mag;
+        Vd_New *= motor->V_scale;
+        Vq_New *= motor->V_scale;
     }
 
     float kaw = 0.1f;

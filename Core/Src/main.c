@@ -64,13 +64,6 @@ static void MPU_Config(void);
 extern uint16_t adc2_buf[2];
 extern uint16_t adc1_buf[2];
 
-extern float Vd_raw;
-extern float Vq_raw;
-extern float Vd_New;
-extern float Vq_New;
-extern float V_scale;
-extern float smo_sat_ratio;
-
 // foc_handle_t motor0;
 
 void Print1_Motor_To_VOFA(float data, uint8_t length)
